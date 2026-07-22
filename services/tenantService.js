@@ -3,6 +3,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   query,
   where,
   doc,
@@ -58,6 +59,28 @@ export const getTenants = async (ownerId) => {
   } catch (error) {
     console.error("Error fetching tenants:", error);
     return [];
+  }
+};
+
+/*
+GET A SINGLE TENANT (guarded to this owner)
+*/
+
+export const getTenant = async (tenantId, ownerId) => {
+  try {
+    const snap = await getDoc(doc(db, "tenants", tenantId));
+
+    if (!snap.exists()) return null;
+
+    const data = snap.data();
+
+    // Defense in depth: never hand back another owner's tenant.
+    if (ownerId && data.ownerId && data.ownerId !== ownerId) return null;
+
+    return { id: snap.id, ...data };
+  } catch (error) {
+    console.error("Error fetching tenant:", error);
+    return null;
   }
 };
 
