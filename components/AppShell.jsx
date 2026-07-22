@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
+import { AUTH_ENABLED } from "../lib/config";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
 
@@ -25,7 +26,7 @@ export default function AppShell({ children }) {
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
   useEffect(() => {
-    if (!loading && !user && !isPublicRoute) {
+    if (AUTH_ENABLED && !loading && !user && !isPublicRoute) {
       router.replace("/login");
     }
   }, [loading, user, isPublicRoute, router]);

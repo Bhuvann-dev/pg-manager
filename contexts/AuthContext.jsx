@@ -16,6 +16,7 @@ import {
 } from "firebase/auth";
 
 import { auth, googleProvider } from "../lib/firebase";
+import { AUTH_ENABLED, LOCAL_OWNER_ID } from "../lib/config";
 
 /*
 Auth context — the single source of truth for the signed-in owner.
@@ -43,6 +44,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Auth disabled: run as a fixed local owner, no Firebase session.
+    if (!AUTH_ENABLED) {
+      setUser({ uid: LOCAL_OWNER_ID, email: "local (auth off)" });
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);

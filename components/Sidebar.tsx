@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { AUTH_ENABLED } from "../lib/config";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -88,23 +89,25 @@ export default function Sidebar() {
 
       </nav>
 
-      {/* Owner + logout */}
-      <div className="p-2 border-t border-slate-800">
-        {!collapsed && user && (
-          <div className="px-3 py-2 text-xs text-gray-400 truncate">
-            {user.email}
-          </div>
-        )}
+      {/* Owner + logout (only when auth is enabled) */}
+      {AUTH_ENABLED && (
+        <div className="p-2 border-t border-slate-800">
+          {!collapsed && user && (
+            <div className="px-3 py-2 text-xs text-gray-400 truncate">
+              {user.email}
+            </div>
+          )}
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full p-3 rounded-lg text-gray-300 hover:bg-slate-800 transition"
-        >
-          <LogOut size={20} />
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full p-3 rounded-lg text-gray-300 hover:bg-slate-800 transition"
+          >
+            <LogOut size={20} />
 
-          {!collapsed && "Sign out"}
-        </button>
-      </div>
+            {!collapsed && "Sign out"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
