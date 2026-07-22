@@ -210,6 +210,7 @@ export default function TenantsPage() {
         dueDate: editingTenant.dueDate
           ? parseInt(editingTenant.dueDate, 10)
           : null,
+        deposit: parseInt(editingTenant.deposit, 10) || 0,
         aadhaarPath
       };
 
@@ -634,12 +635,27 @@ export default function TenantsPage() {
             <label className="text-sm text-gray-400">Due Date (1–31)</label>
             <input
               type="number"
-              className="w-full p-2 mb-4 mt-1 bg-slate-800 rounded"
+              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
               value={editingTenant.dueDate}
               onChange={(e) =>
                 setEditingTenant({
                   ...editingTenant,
                   dueDate: Number(e.target.value)
+                })
+              }
+            />
+
+            <label className="text-sm text-gray-400">
+              Security Deposit (₹)
+            </label>
+            <input
+              type="number"
+              className="w-full p-2 mb-4 mt-1 bg-slate-800 rounded"
+              value={editingTenant.deposit ?? ""}
+              onChange={(e) =>
+                setEditingTenant({
+                  ...editingTenant,
+                  deposit: Number(e.target.value)
                 })
               }
             />

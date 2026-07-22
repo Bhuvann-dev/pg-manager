@@ -26,7 +26,9 @@ import {
 } from "../../../services/storageService";
 import {
   rentStatus,
+  depositPaid,
   RENT,
+  DEPOSIT,
   MONTH_NAMES,
   formatPaidDate
 } from "../../../lib/rent";
@@ -59,6 +61,9 @@ export default function TenantDetailPage() {
 
   const [showPay, setShowPay] = useState(false);
   const [payAmount, setPayAmount] = useState("");
+
+  const [showDeposit, setShowDeposit] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
 
   const today = new Date();
 
@@ -117,6 +122,73 @@ export default function TenantDetailPage() {
     }
   };
 
+  const openDeposit = () => {
+    const expected = Number(tenant.deposit) || 0;
+    const collected = depositPaid(payments, tenant.id);
+    const balance = Math.max(expected - collected, 0);
+    setDepositAmount(String(balance > 0 ? balance : expected));
+    setShowDeposit(true);
+  };
+
+  const handleRecordDeposit = async () => {
+    const amount = parseInt(depositAmount, 10);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      alert("Enter a valid amount.");
+      return;
+    }
+
+    const ok = await recordPayment(
+      {
+        tenantId: tenant.id,
+        tenantName: tenant.name,
+        type: DEPOSIT,
+        amount,
+        month: today.getMonth() + 1,
+        year: today.getFullYear(),
+        status: "paid",
+        paidDate: new Date()
+      },
+      user.uid
+    );
+
+    if (ok) {
+      setShowDeposit(false);
+      setDepositAmount("");
+      await load();
+    } else {
+      alert("Could not record the deposit.");
+    }
+  };
+
+  const handleRefundDeposit = async () => {
+    const collected = depositPaid(payments, tenant.id);
+    if (collected <= 0) return;
+
+    if (
+      !window.confirm(
+        `Refund the full deposit of ₹${collected}? This records a refund entry.`
+      )
+    ) {
+      return;
+    }
+
+    const ok = await recordPayment(
+      {
+        tenantId: tenant.id,
+        tenantName: tenant.name,
+        type: DEPOSIT,
+        amount: -collected,
+        month: today.getMonth() + 1,
+        year: today.getFullYear(),
+        status: "refunded",
+        paidDate: new Date()
+      },
+      user.uid
+    );
+
+    if (ok) await load();
+  };
+
   const handleRemovePayment = async (p) => {
     const label = `${MONTH_NAMES[p.month - 1]} ${p.year}`;
     if (
@@ -168,6 +240,10 @@ export default function TenantDetailPage() {
 
   const s = rentStatus(tenant, payments, today);
   const hasDoc = Boolean(tenant.aadhaarPath || tenant.aadhaarFile);
+
+  const depositExpected = Number(tenant.deposit) || 0;
+  const depositCollected = depositPaid(payments, tenant.id);
+  const depositBalance = Math.max(depositExpected - depositCollected, 0);
 
   const ledger = payments
     .slice()
@@ -222,6 +298,46 @@ export default function TenantDetailPage() {
             label="Balance"
             value={`₹${s.balance}`}
             accent={s.balance > 0 ? "text-red-400" : "text-green-400"}
+          />
+        </div>
+      </div>
+
+      {/* Security deposit */}
+      <div className="bg-slate-900 rounded-xl p-5 mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">Security Deposit</h2>
+
+          <div className="flex gap-2">
+            {depositBalance > 0 && (
+              <button
+                onClick={openDeposit}
+                className="bg-green-600 hover:bg-green-700 transition px-3 py-2 rounded-lg text-sm font-medium"
+              >
+                Record Deposit
+              </button>
+            )}
+            {depositCollected > 0 && (
+              <button
+                onClick={handleRefundDeposit}
+                className="bg-slate-700 hover:bg-slate-600 transition px-3 py-2 rounded-lg text-sm"
+              >
+                Refund
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <Metric label="Expected" value={`₹${depositExpected}`} />
+          <Metric
+            label="Collected"
+            value={`₹${depositCollected}`}
+            accent="text-green-400"
+          />
+          <Metric
+            label="Balance"
+            value={`₹${depositBalance}`}
+            accent={depositBalance > 0 ? "text-amber-400" : "text-green-400"}
           />
         </div>
       </div>
@@ -294,7 +410,7 @@ export default function TenantDetailPage() {
                     {MONTH_NAMES[p.month - 1]} {p.year}
                     {p.type === "deposit" && (
                       <span className="text-xs bg-slate-700 px-2 py-0.5 rounded">
-                        deposit
+                        {(Number(p.amount) || 0) < 0 ? "refund" : "deposit"}
                       </span>
                     )}
                   </div>
@@ -304,8 +420,16 @@ export default function TenantDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-green-400 font-semibold">
-                    ₹{Math.max(Number(p.amount) || 0, 0)}
+                  <span
+                    className={`font-semibold ${
+                      (Number(p.amount) || 0) < 0
+                        ? "text-amber-400"
+                        : "text-green-400"
+                    }`}
+                  >
+                    {(Number(p.amount) || 0) < 0
+                      ? `-₹${Math.abs(Number(p.amount))}`
+                      : `₹${Number(p.amount) || 0}`}
                   </span>
                   <button
                     onClick={() => handleRemovePayment(p)}
@@ -353,6 +477,46 @@ export default function TenantDetailPage() {
               </button>
               <button
                 onClick={() => setShowPay(false)}
+                className="px-4 py-2 bg-gray-600 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Record deposit modal */}
+      {showDeposit && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
+          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-1">Record Deposit</h2>
+            <p className="text-gray-400 text-sm mb-4">{tenant.name}</p>
+
+            <p className="text-sm text-gray-400 mb-2">
+              Expected ₹{depositExpected} · Collected ₹{depositCollected} ·
+              Balance ₹{depositBalance}
+            </p>
+
+            <label className="text-sm text-gray-400">Amount (₹)</label>
+            <input
+              type="number"
+              min={1}
+              autoFocus
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              className="w-full p-3 mt-1 mb-5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRecordDeposit}
+                className="px-4 py-2 bg-green-600 rounded"
+              >
+                Save Deposit
+              </button>
+              <button
+                onClick={() => setShowDeposit(false)}
                 className="px-4 py-2 bg-gray-600 rounded"
               >
                 Cancel

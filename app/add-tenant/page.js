@@ -55,6 +55,9 @@ export default function AddTenantPage() {
   const [dueDate, setDueDate] =
     useState("");
 
+  const [deposit, setDeposit] =
+    useState("");
+
   const [tenants, setTenants] =
     useState([]);
 
@@ -329,6 +332,12 @@ export default function AddTenantPage() {
               10
             ),
 
+          deposit:
+            parseInt(
+              row.Deposit,
+              10
+            ) || 0,
+
           status:
             "active",
 
@@ -398,6 +407,9 @@ export default function AddTenantPage() {
         dueDate:
           parseInt(dueDate, 10),
 
+        deposit:
+          parseInt(deposit, 10) || 0,
+
         aadhaarPath: null,
 
         status: "active",
@@ -452,6 +464,7 @@ export default function AddTenantPage() {
         setRoom("");
         setRent("");
         setDueDate("");
+        setDeposit("");
 
         setAadhaarFile(null);
 
@@ -742,6 +755,26 @@ export default function AddTenantPage() {
           </p>
 
         )}
+
+        {/* SECURITY DEPOSIT (optional) */}
+
+        <label className="mt-4 block">
+
+          Security Deposit (₹, optional)
+
+        </label>
+
+        <input
+          inputMode="numeric"
+          value={deposit}
+          onChange={(e) =>
+            setDeposit(
+              e.target.value.replace(/\D/g, "")
+            )
+          }
+          placeholder="e.g. 10000"
+          className={inputStyle}
+        />
 
         {/* AADHAAR UPLOAD */}
 
