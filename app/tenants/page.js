@@ -265,8 +265,8 @@ export default function TenantsPage() {
 
   return (
     <div>
-      <div className="bg-slate-900 rounded-xl overflow-hidden shadow">
-        <div className="p-4 border-b border-slate-800 flex flex-col gap-4">
+      <div className="card rounded-xl overflow-hidden shadow">
+        <div className="p-4 border-b border-[color:var(--border)] flex flex-col gap-4">
           <h2 className="text-xl font-semibold">Tenants</h2>
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -274,7 +274,7 @@ export default function TenantsPage() {
             <div className="relative w-full md:w-72">
               <Search
                 size={18}
-                className="absolute left-3 top-3 text-gray-400"
+                className="absolute left-3 top-3 text-[color:var(--text-muted)]"
               />
 
               <input
@@ -282,20 +282,20 @@ export default function TenantsPage() {
                 placeholder="Search tenant or room"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                className="input pl-10"
               />
             </div>
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="text-gray-400">Filter by Due Date:</span>
+              <span className="text-[color:var(--text-muted)]">Filter by Due Date:</span>
 
               <input
                 type="number"
                 placeholder="From"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="bg-slate-800 px-3 py-2 rounded-lg w-24"
+                className="input w-24"
               />
 
               <input
@@ -303,13 +303,13 @@ export default function TenantsPage() {
                 placeholder="To"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="bg-slate-800 px-3 py-2 rounded-lg w-24"
+                className="input w-24"
               />
 
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="bg-slate-800 px-3 py-2 rounded-lg"
+                className="input"
               >
                 <option value="asc">Due Date ↑</option>
                 <option value="desc">Due Date ↓</option>
@@ -343,7 +343,7 @@ export default function TenantsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-800">
+              <thead style={{ background: "var(--surface-2)" }}>
                 <tr>
                   <th className="p-3 text-left">Name</th>
                   <th className="p-3 text-left">Room</th>
@@ -363,7 +363,7 @@ export default function TenantsPage() {
                   return (
                     <tr
                       key={tenant.id}
-                      className={`border-b border-slate-800 transition ${
+                      className={`border-b border-[color:var(--border)] transition ${
                         s.status === "overdue"
                           ? "bg-red-900/30 hover:bg-red-900/40"
                           : "hover:bg-slate-800"
@@ -424,7 +424,7 @@ export default function TenantsPage() {
                         {!settled && (
                           <button
                             onClick={() => openPayModal(tenant)}
-                            className="bg-green-600 px-3 py-1 rounded"
+                            className="btn btn-success btn-sm"
                           >
                             Record
                           </button>
@@ -433,7 +433,7 @@ export default function TenantsPage() {
                         {!settled && (
                           <button
                             onClick={() => openWhatsApp(tenant)}
-                            className="bg-blue-600 px-3 py-1 rounded"
+                            className="btn btn-primary btn-sm"
                           >
                             Reminder
                           </button>
@@ -441,7 +441,7 @@ export default function TenantsPage() {
 
                         <button
                           onClick={() => setLedgerTenant(tenant)}
-                          className="bg-slate-600 px-3 py-1 rounded flex items-center gap-1"
+                          className="btn btn-secondary btn-sm"
                         >
                           <History size={14} />
                           History
@@ -449,14 +449,14 @@ export default function TenantsPage() {
 
                         <button
                           onClick={() => setEditingTenant(tenant)}
-                          className="bg-indigo-600 px-3 py-1 rounded"
+                          className="btn btn-secondary btn-sm"
                         >
                           Edit
                         </button>
 
                         <button
                           onClick={() => handleDeactivate(tenant)}
-                          className="bg-red-600 px-3 py-1 rounded"
+                          className="btn btn-danger btn-sm"
                         >
                           Left
                         </button>
@@ -472,10 +472,10 @@ export default function TenantsPage() {
 
       {/* RECORD PAYMENT MODAL */}
       {payingTenant && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+        <div className="modal-backdrop">
+          <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Record Payment</h2>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-[color:var(--text-muted)] text-sm mb-4">
               {payingTenant.name} ·{" "}
               {MONTH_NAMES[today.getMonth()]} {today.getFullYear()}
             </p>
@@ -483,33 +483,33 @@ export default function TenantsPage() {
             {(() => {
               const s = rentStatus(payingTenant, payments, today);
               return (
-                <p className="text-sm text-gray-400 mb-2">
+                <p className="text-sm text-[color:var(--text-muted)] mb-2">
                   Rent ₹{s.rent} · Paid ₹{s.paid} · Balance ₹{s.balance}
                 </p>
               );
             })()}
 
-            <label className="text-sm text-gray-400">Amount (₹)</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Amount (₹)</label>
             <input
               type="number"
               min={1}
               autoFocus
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
-              className="w-full p-3 mt-1 mb-5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+              className="input mt-1 mb-5"
             />
 
             <div className="flex gap-3">
               <button
                 onClick={handleRecordPayment}
-                className="px-4 py-2 bg-green-600 rounded"
+                className="btn btn-success"
               >
                 Save Payment
               </button>
 
               <button
                 onClick={() => setPayingTenant(null)}
-                className="px-4 py-2 bg-gray-600 rounded"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>
@@ -520,29 +520,29 @@ export default function TenantsPage() {
 
       {/* LEDGER MODAL */}
       {ledgerTenant && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-md">
+        <div className="modal-backdrop">
+          <div className="card p-6 rounded-xl w-full max-w-md">
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-xl font-bold">Payment History</h2>
 
               <button
                 onClick={() => setLedgerTenant(null)}
-                className="text-gray-400 hover:text-white text-sm"
+                className="text-[color:var(--text-muted)] hover:text-white text-sm"
               >
                 Close
               </button>
             </div>
 
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-[color:var(--text-muted)] text-sm mb-4">
               {ledgerTenant.name} · Room {ledgerTenant.roomNumber}
             </p>
 
             {tenantLedger(ledgerTenant.id).length === 0 ? (
-              <p className="text-gray-400 text-center py-8">
+              <p className="text-[color:var(--text-muted)] text-center py-8">
                 No payments recorded yet.
               </p>
             ) : (
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-800">
+              <div className="max-h-80 overflow-y-auto divide-y divide-[color:var(--border)]">
                 {tenantLedger(ledgerTenant.id).map((p) => (
                   <div
                     key={p.id}
@@ -558,7 +558,7 @@ export default function TenantsPage() {
                         )}
                       </div>
 
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-[color:var(--text-muted)]">
                         Paid {formatPaidDate(p.paidDate)}
                       </div>
                     </div>
@@ -585,31 +585,31 @@ export default function TenantsPage() {
 
       {/* EDIT MODAL */}
       {editingTenant && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-md">
+        <div className="modal-backdrop">
+          <div className="card p-6 rounded-xl w-full max-w-md">
             <h2 className="text-xl font-bold mb-5">Edit Tenant</h2>
 
-            <label className="text-sm text-gray-400">Name</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Name</label>
             <input
-              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
+              className="input mb-3 mt-1"
               value={editingTenant.name}
               onChange={(e) =>
                 setEditingTenant({ ...editingTenant, name: e.target.value })
               }
             />
 
-            <label className="text-sm text-gray-400">Phone</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Phone</label>
             <input
-              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
+              className="input mb-3 mt-1"
               value={editingTenant.phone}
               onChange={(e) =>
                 setEditingTenant({ ...editingTenant, phone: e.target.value })
               }
             />
 
-            <label className="text-sm text-gray-400">Room Number</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Room Number</label>
             <input
-              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
+              className="input mb-3 mt-1"
               value={editingTenant.roomNumber}
               onChange={(e) =>
                 setEditingTenant({
@@ -619,10 +619,10 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-gray-400">Monthly Rent (₹)</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Monthly Rent (₹)</label>
             <input
               type="number"
-              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
+              className="input mb-3 mt-1"
               value={editingTenant.rentAmount}
               onChange={(e) =>
                 setEditingTenant({
@@ -632,10 +632,10 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-gray-400">Due Date (1–31)</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Due Date (1–31)</label>
             <input
               type="number"
-              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
+              className="input mb-3 mt-1"
               value={editingTenant.dueDate}
               onChange={(e) =>
                 setEditingTenant({
@@ -645,12 +645,12 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-gray-400">
+            <label className="text-sm text-[color:var(--text-muted)]">
               Security Deposit (₹)
             </label>
             <input
               type="number"
-              className="w-full p-2 mb-4 mt-1 bg-slate-800 rounded"
+              className="input mb-4 mt-1"
               value={editingTenant.deposit ?? ""}
               onChange={(e) =>
                 setEditingTenant({
@@ -660,7 +660,7 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-gray-400">Aadhaar Document</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Aadhaar Document</label>
             <div className="mb-3 mt-1">
               {editingTenant.aadhaarPath || editingTenant.aadhaarFile ? (
                 <button
@@ -674,11 +674,11 @@ export default function TenantsPage() {
                   View Current Document
                 </button>
               ) : (
-                <span className="text-gray-400">No document uploaded</span>
+                <span className="text-[color:var(--text-muted)]">No document uploaded</span>
               )}
             </div>
 
-            <label className="text-sm text-gray-400">
+            <label className="text-sm text-[color:var(--text-muted)]">
               Replace Aadhaar (optional)
             </label>
             <input
@@ -696,14 +696,14 @@ export default function TenantsPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleSaveEdit}
-                className="px-4 py-2 bg-green-600 rounded"
+                className="btn btn-success"
               >
                 Save
               </button>
 
               <button
                 onClick={() => setEditingTenant(null)}
-                className="px-4 py-2 bg-gray-600 rounded"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>

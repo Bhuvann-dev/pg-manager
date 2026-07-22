@@ -47,11 +47,11 @@ export default function AppShell({ children }) {
 
   // Authenticated app.
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <Sidebar />
 
-      <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8">
-        {children}
+      <main className="flex-1 min-w-0 px-4 py-6 md:px-10 md:py-8 pb-24 md:pb-8">
+        <div className="mx-auto w-full max-w-6xl">{children}</div>
       </main>
 
       <MobileNav />

@@ -55,78 +55,90 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-slate-900 p-8 rounded-2xl shadow-xl">
-        <h1 className="text-2xl font-bold mb-1">Create your account</h1>
-        <p className="text-gray-400 text-sm mb-6">
+      <div className="w-full max-w-sm card p-8">
+        <div className="flex items-center gap-2.5 mb-6">
+          <span
+            className="grid place-items-center h-10 w-10 rounded-xl text-white shadow-lg text-lg"
+            style={{
+              background: "linear-gradient(135deg, var(--accent), var(--accent-2))"
+            }}
+          >
+            🏠
+          </span>
+          <span className="font-bold text-lg tracking-tight">PG Manager</span>
+        </div>
+
+        <h1 className="text-xl font-bold mb-1">Create your account</h1>
+        <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
           Start managing your PG in minutes.
         </p>
 
         {error && (
-          <p className="bg-red-900/40 text-red-300 text-sm p-3 rounded-lg mb-4">
+          <p className="badge-danger text-sm p-3 rounded-lg mb-4 block">
             {error}
           </p>
         )}
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400">Email</label>
+            <label className="label">Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full mt-1 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+              className="input mt-1"
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-400">Password</label>
+            <label className="label">Password</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full mt-1 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+              className="input mt-1"
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-400">Confirm Password</label>
+            <label className="label">Confirm Password</label>
             <input
               type="password"
               required
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="w-full mt-1 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+              className="input mt-1"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition p-3 rounded-lg font-semibold disabled:opacity-60"
+            className="btn btn-primary w-full"
           >
             {loading ? "Creating…" : "Create Account"}
           </button>
         </form>
 
-        <div className="flex items-center gap-3 my-5 text-gray-500 text-sm">
-          <div className="h-px flex-1 bg-slate-700" />
+        <div className="flex items-center gap-3 my-5 text-sm" style={{ color: "var(--text-faint)" }}>
+          <div className="h-px flex-1" style={{ background: "var(--border)" }} />
           or
-          <div className="h-px flex-1 bg-slate-700" />
+          <div className="h-px flex-1" style={{ background: "var(--border)" }} />
         </div>
 
         <button
           onClick={handleGoogleSignup}
           disabled={loading}
-          className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 transition p-3 rounded-lg font-medium disabled:opacity-60"
+          className="btn btn-secondary w-full"
         >
           Continue with Google
         </button>
 
-        <p className="text-sm text-gray-400 mt-6 text-center">
+        <p className="text-sm mt-6 text-center" style={{ color: "var(--text-muted)" }}>
           Already have an account?{" "}
-          <Link href="/login" className="text-blue-400 hover:underline">
+          <Link href="/login" style={{ color: "var(--accent)" }} className="hover:underline">
             Sign in
           </Link>
         </p>

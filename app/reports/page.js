@@ -121,14 +121,14 @@ export default function ReportsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Rent Report</h1>
-          <p className="text-gray-400 text-sm print-only">{periodLabel}</p>
+          <p className="text-[color:var(--text-muted)] text-sm print-only">{periodLabel}</p>
         </div>
 
         <div className="flex flex-wrap gap-2 no-print">
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="bg-slate-800 px-3 py-2 rounded-lg"
+            className="input"
           >
             {MONTH_NAMES.map((m, i) => (
               <option key={m} value={i + 1}>
@@ -140,7 +140,7 @@ export default function ReportsPage() {
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="bg-slate-800 px-3 py-2 rounded-lg"
+            className="input"
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -151,14 +151,14 @@ export default function ReportsPage() {
 
           <button
             onClick={exportExcel}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 transition px-4 py-2 rounded-lg text-sm font-medium"
+            className="flex items-center gap-2 btn btn-primary"
           >
             <FileSpreadsheet size={16} /> Excel
           </button>
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 transition px-4 py-2 rounded-lg text-sm font-medium"
+            className="btn btn-secondary"
           >
             <Printer size={16} /> PDF
           </button>
@@ -191,9 +191,9 @@ export default function ReportsPage() {
           </div>
 
           {/* Table */}
-          <div className="bg-slate-900 rounded-xl overflow-x-auto">
+          <div className="card rounded-xl overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-800">
+              <thead style={{ background: "var(--surface-2)" }}>
                 <tr>
                   <th className="p-3 text-left">Name</th>
                   <th className="p-3 text-left">Room</th>
@@ -205,7 +205,7 @@ export default function ReportsPage() {
               </thead>
               <tbody>
                 {rows.map((r, i) => (
-                  <tr key={i} className="border-b border-slate-800">
+                  <tr key={i} className="border-b border-[color:var(--border)]">
                     <td className="p-3">{r.name}</td>
                     <td className="p-3">{r.room}</td>
                     <td className="p-3 text-right">₹{r.rent}</td>
@@ -246,8 +246,8 @@ export default function ReportsPage() {
 
 function Summary({ title, value, accent }) {
   return (
-    <div className="bg-slate-900 p-5 rounded-xl">
-      <div className="text-gray-400 text-sm">{title}</div>
+    <div className="card p-5 rounded-xl">
+      <div className="text-[color:var(--text-muted)] text-sm">{title}</div>
       <div className={`text-2xl font-bold mt-1 ${accent || ""}`}>{value}</div>
     </div>
   );

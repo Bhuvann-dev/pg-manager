@@ -293,7 +293,7 @@ export default function TenantDetailPage() {
     <div className="max-w-3xl">
       <Link
         href="/tenants"
-        className="inline-flex items-center gap-1 text-gray-400 hover:text-white text-sm mb-4"
+        className="inline-flex items-center gap-1 text-[color:var(--text-muted)] hover:text-white text-sm mb-4"
       >
         <ArrowLeft size={16} /> Back to Tenants
       </Link>
@@ -302,7 +302,7 @@ export default function TenantDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">{tenant.name}</h1>
-          <p className="text-gray-400 text-sm">
+          <p className="text-[color:var(--text-muted)] text-sm">
             Room {tenant.roomNumber} · due day {tenant.dueDate}
           </p>
         </div>
@@ -316,7 +316,7 @@ export default function TenantDetailPage() {
       </div>
 
       {/* This month */}
-      <div className="bg-slate-900 rounded-xl p-5 mb-4">
+      <div className="card rounded-xl p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">
             {MONTH_NAMES[today.getMonth()]} {today.getFullYear()} rent
@@ -324,7 +324,7 @@ export default function TenantDetailPage() {
           {s.status !== "paid" && (
             <button
               onClick={openPay}
-              className="bg-green-600 hover:bg-green-700 transition px-4 py-2 rounded-lg text-sm font-medium"
+              className="btn btn-primary"
             >
               Record Payment
             </button>
@@ -343,7 +343,7 @@ export default function TenantDetailPage() {
       </div>
 
       {/* Security deposit */}
-      <div className="bg-slate-900 rounded-xl p-5 mb-4">
+      <div className="card rounded-xl p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Security Deposit</h2>
 
@@ -351,7 +351,7 @@ export default function TenantDetailPage() {
             {depositBalance > 0 && (
               <button
                 onClick={openDeposit}
-                className="bg-green-600 hover:bg-green-700 transition px-3 py-2 rounded-lg text-sm font-medium"
+                className="btn btn-primary btn-sm"
               >
                 Record Deposit
               </button>
@@ -359,7 +359,7 @@ export default function TenantDetailPage() {
             {depositCollected > 0 && (
               <button
                 onClick={handleRefundDeposit}
-                className="bg-slate-700 hover:bg-slate-600 transition px-3 py-2 rounded-lg text-sm"
+                className="btn btn-secondary btn-sm"
               >
                 Refund
               </button>
@@ -384,7 +384,7 @@ export default function TenantDetailPage() {
 
       {/* Profile + actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div className="bg-slate-900 rounded-xl p-5">
+        <div className="card rounded-xl p-5">
           <h2 className="font-semibold mb-4">Profile</h2>
 
           <Row label="Phone" value={tenant.phone} />
@@ -393,20 +393,20 @@ export default function TenantDetailPage() {
           <Row label="Due day" value={tenant.dueDate} />
         </div>
 
-        <div className="bg-slate-900 rounded-xl p-5">
+        <div className="card rounded-xl p-5">
           <h2 className="font-semibold mb-4">Actions</h2>
 
           <div className="flex flex-col gap-2">
             <a
               href={`tel:${tenant.phone}`}
-              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 transition px-4 py-2 rounded-lg text-sm"
+              className="btn btn-secondary w-full justify-start"
             >
               <Phone size={16} /> Call
             </a>
 
             <button
               onClick={() => openWhatsApp(tenant)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-lg text-sm"
+              className="btn btn-primary w-full justify-start"
             >
               <MessageCircle size={16} /> WhatsApp reminder
             </button>
@@ -416,7 +416,7 @@ export default function TenantDetailPage() {
                 setMoveRoom(tenant.roomNumber);
                 setShowMove(true);
               }}
-              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 transition px-4 py-2 rounded-lg text-sm"
+              className="btn btn-secondary w-full justify-start"
             >
               <DoorOpen size={16} /> Move room
             </button>
@@ -424,7 +424,7 @@ export default function TenantDetailPage() {
             <button
               onClick={handleViewDocument}
               disabled={!hasDoc}
-              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 transition px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+              className="btn btn-secondary w-full justify-start disabled:opacity-50"
             >
               <FileText size={16} />
               {hasDoc ? "View ID document" : "No ID document"}
@@ -432,7 +432,7 @@ export default function TenantDetailPage() {
 
             <button
               onClick={handleLeft}
-              className="flex items-center gap-2 bg-red-600/80 hover:bg-red-600 transition px-4 py-2 rounded-lg text-sm"
+              className="btn btn-danger w-full justify-start"
             >
               <LogOut size={16} /> Mark as left
             </button>
@@ -441,15 +441,15 @@ export default function TenantDetailPage() {
       </div>
 
       {/* Ledger */}
-      <div className="bg-slate-900 rounded-xl p-5">
+      <div className="card rounded-xl p-5">
         <h2 className="font-semibold mb-4">Payment History</h2>
 
         {ledger.length === 0 ? (
-          <p className="text-gray-400 text-sm py-4">
+          <p className="text-[color:var(--text-muted)] text-sm py-4">
             No payments recorded yet.
           </p>
         ) : (
-          <div className="divide-y divide-slate-800">
+          <div className="divide-y divide-[color:var(--border)]">
             {ledger.map((p) => (
               <div
                 key={p.id}
@@ -464,7 +464,7 @@ export default function TenantDetailPage() {
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-[color:var(--text-muted)]">
                     Paid {formatPaidDate(p.paidDate)}
                   </div>
                 </div>
@@ -496,38 +496,38 @@ export default function TenantDetailPage() {
 
       {/* Record payment modal */}
       {showPay && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+        <div className="modal-backdrop">
+          <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Record Payment</h2>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-[color:var(--text-muted)] text-sm mb-4">
               {tenant.name} · {MONTH_NAMES[today.getMonth()]}{" "}
               {today.getFullYear()}
             </p>
 
-            <p className="text-sm text-gray-400 mb-2">
+            <p className="text-sm text-[color:var(--text-muted)] mb-2">
               Rent ₹{s.rent} · Paid ₹{s.paid} · Balance ₹{s.balance}
             </p>
 
-            <label className="text-sm text-gray-400">Amount (₹)</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Amount (₹)</label>
             <input
               type="number"
               min={1}
               autoFocus
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
-              className="w-full p-3 mt-1 mb-5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+              className="input mt-1 mb-5"
             />
 
             <div className="flex gap-3">
               <button
                 onClick={handleRecordPayment}
-                className="px-4 py-2 bg-green-600 rounded"
+                className="btn btn-success"
               >
                 Save Payment
               </button>
               <button
                 onClick={() => setShowPay(false)}
-                className="px-4 py-2 bg-gray-600 rounded"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>
@@ -538,10 +538,10 @@ export default function TenantDetailPage() {
 
       {/* Move room modal */}
       {showMove && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+        <div className="modal-backdrop">
+          <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Move Room</h2>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-[color:var(--text-muted)] text-sm mb-4">
               {tenant.name} · currently Room {tenant.roomNumber}
             </p>
 
@@ -551,11 +551,11 @@ export default function TenantDetailPage() {
               </p>
             ) : (
               <>
-                <label className="text-sm text-gray-400">New room</label>
+                <label className="text-sm text-[color:var(--text-muted)]">New room</label>
                 <select
                   value={moveRoom}
                   onChange={(e) => setMoveRoom(e.target.value)}
-                  className="w-full p-3 mt-1 mb-5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                  className="input mt-1 mb-5"
                 >
                   {rooms
                     .slice()
@@ -592,13 +592,13 @@ export default function TenantDetailPage() {
               <button
                 onClick={handleMoveRoom}
                 disabled={rooms.length === 0}
-                className="px-4 py-2 bg-green-600 rounded disabled:opacity-50"
+                className="btn btn-success disabled:opacity-50"
               >
                 Move
               </button>
               <button
                 onClick={() => setShowMove(false)}
-                className="px-4 py-2 bg-gray-600 rounded"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>
@@ -609,36 +609,36 @@ export default function TenantDetailPage() {
 
       {/* Record deposit modal */}
       {showDeposit && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+        <div className="modal-backdrop">
+          <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Record Deposit</h2>
-            <p className="text-gray-400 text-sm mb-4">{tenant.name}</p>
+            <p className="text-[color:var(--text-muted)] text-sm mb-4">{tenant.name}</p>
 
-            <p className="text-sm text-gray-400 mb-2">
+            <p className="text-sm text-[color:var(--text-muted)] mb-2">
               Expected ₹{depositExpected} · Collected ₹{depositCollected} ·
               Balance ₹{depositBalance}
             </p>
 
-            <label className="text-sm text-gray-400">Amount (₹)</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Amount (₹)</label>
             <input
               type="number"
               min={1}
               autoFocus
               value={depositAmount}
               onChange={(e) => setDepositAmount(e.target.value)}
-              className="w-full p-3 mt-1 mb-5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+              className="input mt-1 mb-5"
             />
 
             <div className="flex gap-3">
               <button
                 onClick={handleRecordDeposit}
-                className="px-4 py-2 bg-green-600 rounded"
+                className="btn btn-success"
               >
                 Save Deposit
               </button>
               <button
                 onClick={() => setShowDeposit(false)}
-                className="px-4 py-2 bg-gray-600 rounded"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>
@@ -654,15 +654,15 @@ function Metric({ label, value, accent }) {
   return (
     <div>
       <div className={`text-2xl font-bold ${accent || ""}`}>{value}</div>
-      <div className="text-gray-400 text-xs mt-1">{label}</div>
+      <div className="text-[color:var(--text-muted)] text-xs mt-1">{label}</div>
     </div>
   );
 }
 
 function Row({ label, value }) {
   return (
-    <div className="flex justify-between py-2 border-b border-slate-800 last:border-0">
-      <span className="text-gray-400 text-sm">{label}</span>
+    <div className="flex justify-between py-2 border-b border-[color:var(--border)] last:border-0">
+      <span className="text-[color:var(--text-muted)] text-sm">{label}</span>
       <span className="text-sm">{value}</span>
     </div>
   );

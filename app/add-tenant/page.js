@@ -492,7 +492,7 @@ export default function AddTenantPage() {
   */
 
   const inputStyle =
-    "w-full p-3 rounded-lg bg-slate-800 border border-slate-700 text-white";
+    "input";
 
   const errorStyle =
     "text-red-400 text-sm mt-1";
@@ -501,7 +501,7 @@ export default function AddTenantPage() {
 
     <div className="flex justify-center mt-8 px-3">
 
-      <div className="bg-slate-900 p-8 rounded-2xl shadow-xl w-full max-w-xl">
+      <div className="card p-8 rounded-2xl shadow-xl w-full max-w-xl">
 
         <h2 className="text-2xl font-bold mb-6">
 
@@ -519,7 +519,7 @@ export default function AddTenantPage() {
             type="file"
             accept=".xlsx,.csv"
             onChange={handleBulkUpload}
-            className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+            className="input"
           />
 
         </div>
@@ -815,7 +815,7 @@ export default function AddTenantPage() {
             setAadhaarFile(file);
 
           }}
-          className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+          className="input"
         />
 
         {aadhaarFile && (
@@ -839,7 +839,7 @@ export default function AddTenantPage() {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 transition p-3 rounded-lg font-semibold"
+          className="btn btn-primary w-full mt-6"
         >
 
           {loading

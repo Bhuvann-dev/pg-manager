@@ -176,13 +176,13 @@ export default function RoomsPage() {
       </div>
 
       {/* Add room */}
-      <div className="bg-slate-900 p-5 rounded-xl">
+      <div className="card p-5 rounded-xl">
         <h2 className="font-semibold mb-4 flex items-center gap-2">
           <Plus size={18} /> Add a Room
         </h2>
 
         {error && (
-          <p className="bg-red-900/40 text-red-300 text-sm p-3 rounded-lg mb-4">
+          <p className="badge-danger block text-sm p-3 rounded-lg mb-4">
             {error}
           </p>
         )}
@@ -192,7 +192,7 @@ export default function RoomsPage() {
             placeholder="Room number"
             value={roomNumber}
             onChange={(e) => setRoomNumber(e.target.value)}
-            className="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+            className="input flex-1"
           />
 
           <input
@@ -201,19 +201,19 @@ export default function RoomsPage() {
             placeholder="Beds"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
-            className="w-full md:w-28 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+            className="input w-full md:w-28"
           />
 
           <input
             placeholder="Notes (optional)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white"
+            className="input flex-1"
           />
 
           <button
             onClick={handleAddRoom}
-            className="bg-blue-600 hover:bg-blue-700 transition px-5 py-3 rounded-lg font-semibold"
+            className="btn btn-primary"
           >
             Add
           </button>
@@ -224,7 +224,7 @@ export default function RoomsPage() {
       {loading ? (
         <Loading label="Loading rooms…" />
       ) : rooms.length === 0 ? (
-        <div className="text-gray-400 text-center py-10">
+        <div className="text-[color:var(--text-muted)] text-center py-10">
           No rooms yet. Add your first room above.
         </div>
       ) : (
@@ -249,7 +249,7 @@ export default function RoomsPage() {
               return (
                 <div
                   key={room.id}
-                  className="bg-slate-900 p-5 rounded-xl shadow"
+                  className="card p-5 rounded-xl shadow"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function RoomsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingRoom(room)}
-                        className="text-gray-400 hover:text-white"
+                        className="text-[color:var(--text-muted)] hover:text-white"
                         aria-label="Edit room"
                       >
                         <Pencil size={16} />
@@ -270,7 +270,7 @@ export default function RoomsPage() {
 
                       <button
                         onClick={() => handleDelete(room)}
-                        className="text-gray-400 hover:text-red-400"
+                        className="text-[color:var(--text-muted)] hover:text-red-400"
                         aria-label="Delete room"
                       >
                         <Trash2 size={16} />
@@ -282,7 +282,7 @@ export default function RoomsPage() {
                     <span className="text-3xl font-bold">
                       {occupancy}
                     </span>
-                    <span className="text-gray-400">
+                    <span className="text-[color:var(--text-muted)]">
                       / {room.capacity} beds
                     </span>
                   </div>
@@ -296,7 +296,7 @@ export default function RoomsPage() {
                   </div>
 
                   {room.notes && (
-                    <p className="mt-3 text-sm text-gray-400">
+                    <p className="mt-3 text-sm text-[color:var(--text-muted)]">
                       {room.notes}
                     </p>
                   )}
@@ -308,15 +308,15 @@ export default function RoomsPage() {
 
       {/* Edit modal */}
       {editingRoom && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+        <div className="modal-backdrop">
+          <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-5">
               Edit Room {editingRoom.roomNumber}
             </h2>
 
-            <label className="text-sm text-gray-400">Room Number</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Room Number</label>
             <input
-              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
+              className="input mb-3 mt-1"
               value={editingRoom.roomNumber}
               onChange={(e) =>
                 setEditingRoom({
@@ -326,11 +326,11 @@ export default function RoomsPage() {
               }
             />
 
-            <label className="text-sm text-gray-400">Beds (capacity)</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Beds (capacity)</label>
             <input
               type="number"
               min={1}
-              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
+              className="input mb-3 mt-1"
               value={editingRoom.capacity}
               onChange={(e) =>
                 setEditingRoom({
@@ -340,9 +340,9 @@ export default function RoomsPage() {
               }
             />
 
-            <label className="text-sm text-gray-400">Notes</label>
+            <label className="text-sm text-[color:var(--text-muted)]">Notes</label>
             <input
-              className="w-full p-2 mb-5 mt-1 bg-slate-800 rounded"
+              className="input mb-5 mt-1"
               value={editingRoom.notes || ""}
               onChange={(e) =>
                 setEditingRoom({
@@ -355,14 +355,14 @@ export default function RoomsPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleSaveEdit}
-                className="px-4 py-2 bg-green-600 rounded"
+                className="btn btn-success"
               >
                 Save
               </button>
 
               <button
                 onClick={() => setEditingRoom(null)}
-                className="px-4 py-2 bg-gray-600 rounded"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>
@@ -376,8 +376,8 @@ export default function RoomsPage() {
 
 function SummaryCard({ title, value }) {
   return (
-    <div className="bg-slate-900 p-5 rounded-xl shadow-md">
-      <div className="text-gray-400 text-sm">{title}</div>
+    <div className="card p-5 rounded-xl shadow-md">
+      <div className="text-[color:var(--text-muted)] text-sm">{title}</div>
       <div className="text-3xl font-bold mt-2">{value}</div>
     </div>
   );

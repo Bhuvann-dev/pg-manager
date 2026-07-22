@@ -1,28 +1,273 @@
 @import "tailwindcss";
 
+/*
+============================================================
+PG Manager — design system
+A modern dark dashboard aesthetic: layered near-black surfaces,
+an indigo→violet accent, soft borders, and gentle elevation.
+============================================================
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base surfaces */
+  --bg: #0a0e17;
+  --bg-2: #0d1322;
+  --surface: #121a2b;
+  --surface-2: #182136;
+  --surface-3: #1f2b44;
+
+  /* Borders & lines */
+  --border: rgba(148, 163, 184, 0.12);
+  --border-strong: rgba(148, 163, 184, 0.22);
+
+  /* Text */
+  --text: #e8ecf5;
+  --text-muted: #93a1b9;
+  --text-faint: #64748b;
+
+  /* Brand accent */
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-2: #8b5cf6;
+
+  /* Semantic */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --pending: #facc15;
+
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(
+      1200px 600px at 15% -10%,
+      rgba(99, 102, 241, 0.10),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 100% 0%,
+      rgba(139, 92, 246, 0.08),
+      transparent 55%
+    ),
+    linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Selection + focus */
+::selection {
+  background: rgba(99, 102, 241, 0.35);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/*
+------------------------------------------------------------
+Reusable component classes
+------------------------------------------------------------
+*/
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .card-hover {
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.55rem 1rem;
+    border-radius: 12px;
+    transition: background 0.15s ease, opacity 0.15s ease,
+      transform 0.05s ease, border-color 0.15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 6px 18px -8px rgba(99, 102, 241, 0.9);
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  .btn-secondary {
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--surface-3);
+  }
+
+  .btn-success {
+    color: #04120b;
+    background: var(--success);
+  }
+  .btn-success:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  .btn-danger {
+    color: #fff;
+    background: rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.4);
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.25);
+  }
+
+  .btn-ghost {
+    color: var(--text-muted);
+    background: transparent;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .btn-sm {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    border-radius: 10px;
+  }
+
+  /* Inputs */
+  .input {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input::placeholder {
+    color: var(--text-faint);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  }
+
+  .label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .badge-success {
+    color: var(--success);
+    background: rgba(52, 211, 153, 0.12);
+    border-color: rgba(52, 211, 153, 0.3);
+  }
+  .badge-warning {
+    color: var(--warning);
+    background: rgba(251, 191, 36, 0.12);
+    border-color: rgba(251, 191, 36, 0.3);
+  }
+  .badge-danger {
+    color: var(--danger);
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.3);
+  }
+  .badge-pending {
+    color: var(--pending);
+    background: rgba(250, 204, 21, 0.12);
+    border-color: rgba(250, 204, 21, 0.3);
+  }
+  .badge-neutral {
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 6, 12, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+  }
 }
 
 /* Shown only when printing (e.g. the report period under the title). */
@@ -48,7 +293,6 @@ without the app chrome. Everything else is hidden.
     display: block !important;
   }
 
-  /* Isolate the report container. */
   body * {
     visibility: hidden;
   }
@@ -67,11 +311,13 @@ without the app chrome. Everything else is hidden.
     color: #000000 !important;
   }
 
-  /* Flatten the dark cards/tables to printable light styling. */
+  #report .card,
   #report .bg-slate-900,
   #report .bg-slate-800 {
     background: #ffffff !important;
     color: #000000 !important;
+    box-shadow: none !important;
+    border-color: #cccccc !important;
   }
 
   #report table {

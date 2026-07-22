@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, MessageCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  MessageCircle,
+  Users,
+  TrendingUp,
+  Wallet,
+  BedDouble
+} from "lucide-react";
 import { getTenants, openWhatsApp } from "../services/tenantService";
 import { getPayments } from "../services/paymentService";
 import { getRooms, computeOccupancy } from "../services/roomService";
@@ -12,6 +19,13 @@ import { useAuth } from "../contexts/AuthContext";
 
 const STATUS_ORDER = { overdue: 0, partial: 1, pending: 2, paid: 3 };
 
+const STATUS_BADGE = {
+  paid: "badge-success",
+  partial: "badge-warning",
+  overdue: "badge-danger",
+  pending: "badge-pending"
+};
+
 const STATUS_LABEL = {
   paid: "Paid",
   partial: "Partial",
@@ -19,12 +33,21 @@ const STATUS_LABEL = {
   pending: "Pending"
 };
 
-const STATUS_STYLES = {
-  paid: "text-green-400",
-  partial: "text-amber-400",
-  overdue: "text-red-400",
-  pending: "text-yellow-400"
-};
+const AVATAR_COLORS = [
+  "linear-gradient(135deg,#6366f1,#8b5cf6)",
+  "linear-gradient(135deg,#0ea5e9,#22d3ee)",
+  "linear-gradient(135deg,#f59e0b,#f97316)",
+  "linear-gradient(135deg,#10b981,#34d399)",
+  "linear-gradient(135deg,#ec4899,#f43f5e)"
+];
+
+const initials = (name) =>
+  name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -40,13 +63,11 @@ export default function Dashboard() {
 
   const loadData = async (ownerId) => {
     setLoading(true);
-
     const [tenantData, paymentData, roomData] = await Promise.all([
       getTenants(ownerId),
       getPayments(ownerId),
       getRooms(ownerId)
     ]);
-
     setTenants(tenantData.filter((t) => t.status !== "inactive"));
     setPayments(paymentData);
     setRooms(roomData);
@@ -55,24 +76,17 @@ export default function Dashboard() {
 
   const today = new Date();
 
-  if (loading) {
-    return <Loading label="Loading your dashboard…" />;
-  }
+  if (loading) return <Loading label="Loading your dashboard…" />;
 
   const summary = summarizeMonth(tenants, payments, today);
 
-  // Occupancy
-  const totalBeds = rooms.reduce(
-    (sum, r) => sum + (Number(r.capacity) || 0),
-    0
-  );
+  const totalBeds = rooms.reduce((s, r) => s + (Number(r.capacity) || 0), 0);
   const occupiedBeds = rooms.reduce(
-    (sum, r) => sum + computeOccupancy(r, tenants),
+    (s, r) => s + computeOccupancy(r, tenants),
     0
   );
   const vacantBeds = Math.max(totalBeds - occupiedBeds, 0);
 
-  // Follow-up list: everyone not fully paid, most urgent first.
   const followUps = tenants
     .map((t) => ({ tenant: t, s: rentStatus(t, payments, today) }))
     .filter((x) => x.s.status !== "paid")
@@ -84,145 +98,196 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <span className="text-gray-400 text-sm">
-          {MONTH_NAMES[today.getMonth()]} {today.getFullYear()}
-        </span>
+      {/* Header */}
+      <div className="flex items-end justify-between mb-7">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+            Rent overview for {MONTH_NAMES[today.getMonth()]}{" "}
+            {today.getFullYear()}
+          </p>
+        </div>
       </div>
 
-      {/* Rent this month */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Total Tenants" value={summary.total} />
-
+      {/* Rent stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
+          icon={Users}
+          tint="99,102,241"
+          title="Total Tenants"
+          value={summary.total}
+        />
+        <StatCard
+          icon={TrendingUp}
+          tint="52,211,153"
           title="Collection Rate"
           value={`${summary.collectionRate}%`}
-          accent={
-            summary.collectionRate >= 80
-              ? "text-green-400"
-              : summary.collectionRate >= 50
-              ? "text-amber-400"
-              : "text-red-400"
-          }
+          sub={`₹${summary.collected} of ₹${summary.expected}`}
         />
-
         <StatCard
+          icon={Wallet}
+          tint="14,165,233"
           title="Collected"
           value={`₹${summary.collected}`}
-          sub={`of ₹${summary.expected}`}
+          sub="this month"
         />
-
         <StatCard
+          icon={AlertTriangle}
+          tint="248,113,113"
           title="Overdue"
           value={`₹${summary.overdueAmount}`}
-          accent={summary.overdueAmount > 0 ? "text-red-400" : undefined}
           sub={`${summary.overdue} tenant(s)`}
         />
       </div>
 
       {/* Status chips */}
-      <div className="flex flex-wrap gap-3 mt-4 text-sm">
-        <Chip label="Paid" value={summary.paid} className="text-green-400" />
-        <Chip
-          label="Partial"
-          value={summary.partial}
-          className="text-amber-400"
-        />
-        <Chip
-          label="Pending"
-          value={summary.pending}
-          className="text-yellow-400"
-        />
-        <Chip
-          label="Overdue"
-          value={summary.overdue}
-          className="text-red-400"
-        />
+      <div className="flex flex-wrap gap-2 mt-4">
+        <span className="badge badge-success">
+          {summary.paid} Paid
+        </span>
+        <span className="badge badge-warning">
+          {summary.partial} Partial
+        </span>
+        <span className="badge badge-pending">
+          {summary.pending} Pending
+        </span>
+        <span className="badge badge-danger">
+          {summary.overdue} Overdue
+        </span>
       </div>
 
-      {/* Occupancy */}
-      <h2 className="text-lg font-semibold mt-8 mb-4">Occupancy</h2>
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard title="Total Beds" value={totalBeds} />
-        <StatCard title="Occupied" value={occupiedBeds} />
-        <StatCard title="Vacant" value={vacantBeds} />
-      </div>
+      {/* Two-column: follow-up + occupancy */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-8">
+        {/* Follow-up */}
+        <div className="lg:col-span-2">
+          <h2 className="text-lg font-semibold mb-3">Needs Follow-up</h2>
 
-      {/* Needs follow-up */}
-      <h2 className="text-lg font-semibold mt-8 mb-4">
-        Needs Follow-up
-      </h2>
+          {followUps.length === 0 ? (
+            <div className="card p-8 text-center" style={{ color: "var(--success)" }}>
+              🎉 Everyone has paid this month.
+            </div>
+          ) : (
+            <div className="card divide-y" style={{ borderColor: "var(--border)" }}>
+              {followUps.map(({ tenant, s }, i) => (
+                <div
+                  key={tenant.id}
+                  className="flex items-center justify-between gap-3 p-4"
+                  style={{ borderColor: "var(--border)" }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className="grid place-items-center h-10 w-10 rounded-full text-sm font-bold text-white shrink-0"
+                      style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                    >
+                      {initials(tenant.name)}
+                    </span>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/tenants/${tenant.id}`}
+                        className="font-medium hover:underline truncate block"
+                      >
+                        {tenant.name}
+                      </Link>
+                      <div className="text-xs" style={{ color: "var(--text-faint)" }}>
+                        Room {tenant.roomNumber} · due {tenant.dueDate} · ₹
+                        {s.balance} due
+                      </div>
+                    </div>
+                  </div>
 
-      {followUps.length === 0 ? (
-        <div className="bg-slate-900 rounded-xl p-6 text-green-400">
-          🎉 Everyone has paid this month.
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={`badge ${STATUS_BADGE[s.status]} hidden sm:inline-flex`}>
+                      {s.status === "overdue" && <AlertTriangle size={12} />}
+                      {STATUS_LABEL[s.status]}
+                    </span>
+                    <button
+                      onClick={() => openWhatsApp(tenant)}
+                      className="btn btn-primary btn-sm"
+                    >
+                      <MessageCircle size={15} />
+                      <span className="hidden sm:inline">Remind</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="bg-slate-900 rounded-xl divide-y divide-slate-800">
-          {followUps.map(({ tenant, s }) => (
-            <div
-              key={tenant.id}
-              className="flex items-center justify-between p-4 gap-4"
-            >
-              <div className="min-w-0">
-                <Link
-                  href={`/tenants/${tenant.id}`}
-                  className="font-medium text-blue-400 hover:underline"
-                >
-                  {tenant.name}
-                </Link>
-                <div className="text-xs text-gray-400">
-                  Room {tenant.roomNumber} · due {tenant.dueDate}
-                </div>
-              </div>
 
-              <div className="flex items-center gap-4 shrink-0">
-                <div className="text-right">
-                  <div
-                    className={`text-sm font-medium flex items-center gap-1 ${
-                      STATUS_STYLES[s.status]
-                    }`}
-                  >
-                    {s.status === "overdue" && <AlertTriangle size={14} />}
-                    {STATUS_LABEL[s.status]}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    ₹{s.balance} due
-                  </div>
+        {/* Occupancy */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Occupancy</h2>
+          <div className="card p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <span
+                className="grid place-items-center h-11 w-11 rounded-xl"
+                style={{ background: "rgba(139,92,246,0.15)", color: "var(--accent-2)" }}
+              >
+                <BedDouble size={20} />
+              </span>
+              <div>
+                <div className="text-2xl font-bold">
+                  {occupiedBeds}
+                  <span style={{ color: "var(--text-faint)" }}>/{totalBeds}</span>
                 </div>
-
-                <button
-                  onClick={() => openWhatsApp(tenant)}
-                  className="bg-blue-600 hover:bg-blue-700 transition px-3 py-2 rounded-lg flex items-center gap-1 text-sm"
-                >
-                  <MessageCircle size={16} />
-                  <span className="hidden sm:inline">Remind</span>
-                </button>
+                <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  beds occupied
+                </div>
               </div>
             </div>
-          ))}
+
+            {/* Occupancy bar */}
+            <div
+              className="h-2.5 rounded-full overflow-hidden"
+              style={{ background: "var(--surface-3)" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${totalBeds ? (occupiedBeds / totalBeds) * 100 : 0}%`,
+                  background: "linear-gradient(90deg, var(--accent), var(--accent-2))"
+                }}
+              />
+            </div>
+
+            <div className="flex justify-between mt-4 text-sm">
+              <span style={{ color: "var(--text-muted)" }}>Vacant beds</span>
+              <span className="font-semibold" style={{ color: "var(--success)" }}>
+                {vacantBeds}
+              </span>
+            </div>
+
+            <Link
+              href="/rooms"
+              className="btn btn-secondary btn-sm w-full mt-4"
+            >
+              Manage rooms
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, title, value, sub, tint }) {
+  return (
+    <div className="card card-hover p-5">
+      <span
+        className="grid place-items-center h-10 w-10 rounded-xl mb-4"
+        style={{ background: `rgba(${tint},0.15)`, color: `rgb(${tint})` }}
+      >
+        <Icon size={20} />
+      </span>
+      <div className="text-sm" style={{ color: "var(--text-muted)" }}>
+        {title}
+      </div>
+      <div className="text-2xl font-bold mt-1">{value}</div>
+      {sub && (
+        <div className="text-xs mt-1" style={{ color: "var(--text-faint)" }}>
+          {sub}
         </div>
       )}
     </div>
-  );
-}
-
-function StatCard({ title, value, sub, accent }) {
-  return (
-    <div className="bg-slate-900 p-6 rounded-xl shadow-md">
-      <div className="text-gray-400 text-sm">{title}</div>
-      <div className={`text-3xl font-bold mt-2 ${accent || ""}`}>{value}</div>
-      {sub && <div className="text-gray-500 text-xs mt-1">{sub}</div>}
-    </div>
-  );
-}
-
-function Chip({ label, value, className }) {
-  return (
-    <span className="bg-slate-900 rounded-full px-4 py-1.5">
-      <span className={`font-semibold ${className}`}>{value}</span>{" "}
-      <span className="text-gray-400">{label}</span>
-    </span>
   );
 }

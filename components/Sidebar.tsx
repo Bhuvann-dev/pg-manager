@@ -10,7 +10,8 @@ import {
   FileBarChart,
   Menu,
   ChevronLeft,
-  LogOut
+  LogOut,
+  Home
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -36,80 +37,98 @@ export default function Sidebar() {
   ];
 
   return (
-    <div
-      className={`h-screen bg-slate-900 text-white transition-all duration-200 ${collapsed ? "w-16" : "w-64"
-        } hidden md:flex flex-col`}
+    <aside
+      className={`sticky top-0 h-screen shrink-0 hidden md:flex flex-col transition-all duration-200 ${
+        collapsed ? "w-[76px]" : "w-64"
+      }`}
+      style={{
+        background: "var(--surface)",
+        borderRight: "1px solid var(--border)"
+      }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-800">
+      {/* Brand */}
+      <div className="flex items-center justify-between p-4 h-16">
         {!collapsed && (
-          <span className="font-bold text-lg">
-            PG Manager
-          </span>
+          <div className="flex items-center gap-2.5">
+            <span
+              className="grid place-items-center h-9 w-9 rounded-xl text-white shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, var(--accent), var(--accent-2))"
+              }}
+            >
+              <Home size={18} />
+            </span>
+            <span className="font-bold text-[15px] tracking-tight">
+              PG Manager
+            </span>
+          </div>
         )}
 
         <button
-          onClick={() =>
-            setCollapsed(!collapsed)
-          }
+          onClick={() => setCollapsed(!collapsed)}
+          className="btn-ghost grid place-items-center h-9 w-9 rounded-lg"
+          aria-label="Toggle sidebar"
         >
-          {collapsed ? (
-            <Menu size={20} />
-          ) : (
-            <ChevronLeft size={20} />
-          )}
+          {collapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-2">
-
+      <nav className="flex-1 px-3 py-2 space-y-1">
         {navItems.map((item) => {
-
           const Icon = item.icon;
-
-          const active =
-            pathname === item.href;
+          const active = pathname === item.href;
 
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 p-3 rounded-lg transition ${active
-                ? "bg-blue-600"
-                : "hover:bg-slate-800"
-                }`}
+              title={item.name}
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
+                collapsed ? "justify-center" : ""
+              }`}
+              style={
+                active
+                  ? {
+                      background:
+                        "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.14))",
+                      color: "#fff",
+                      border: "1px solid rgba(99,102,241,0.35)"
+                    }
+                  : { color: "var(--text-muted)" }
+              }
             >
-              <Icon size={20} />
-
-              {!collapsed &&
-                item.name}
+              {active && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full"
+                  style={{ background: "var(--accent)" }}
+                />
+              )}
+              <Icon size={19} />
+              {!collapsed && item.name}
             </Link>
           );
-
         })}
-
       </nav>
 
       {/* Owner + logout (only when auth is enabled) */}
       {AUTH_ENABLED && (
-        <div className="p-2 border-t border-slate-800">
+        <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
           {!collapsed && user && (
-            <div className="px-3 py-2 text-xs text-gray-400 truncate">
+            <div className="px-2 pb-2 text-xs truncate" style={{ color: "var(--text-faint)" }}>
               {user.email}
             </div>
           )}
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full p-3 rounded-lg text-gray-300 hover:bg-slate-800 transition"
+            className={`btn btn-ghost w-full ${collapsed ? "px-0" : "justify-start"}`}
           >
-            <LogOut size={20} />
-
+            <LogOut size={18} />
             {!collapsed && "Sign out"}
           </button>
         </div>
       )}
-    </div>
+    </aside>
   );
 }
