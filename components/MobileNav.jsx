@@ -6,7 +6,8 @@ import {
     LayoutDashboard,
     DoorOpen,
     Users,
-    UserPlus
+    UserPlus,
+    FileBarChart
 } from "lucide-react";
 
 export default function MobileNav() {
@@ -32,6 +33,11 @@ export default function MobileNav() {
             name: "Add",
             href: "/add-tenant",
             icon: UserPlus
+        },
+        {
+            name: "Reports",
+            href: "/reports",
+            icon: FileBarChart
         }
     ];
 

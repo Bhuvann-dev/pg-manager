@@ -24,3 +24,63 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Shown only when printing (e.g. the report period under the title). */
+.print-only {
+  display: none;
+}
+
+/*
+Print / "Save as PDF": show only the report, on white, so it prints clean
+without the app chrome. Everything else is hidden.
+*/
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Isolate the report container. */
+  body * {
+    visibility: hidden;
+  }
+
+  #report,
+  #report * {
+    visibility: visible;
+  }
+
+  #report {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0;
+    color: #000000 !important;
+  }
+
+  /* Flatten the dark cards/tables to printable light styling. */
+  #report .bg-slate-900,
+  #report .bg-slate-800 {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  #report table {
+    border-collapse: collapse;
+  }
+
+  #report th,
+  #report td {
+    border: 1px solid #cccccc !important;
+    color: #000000 !important;
+  }
+}

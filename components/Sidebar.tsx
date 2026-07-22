@@ -7,6 +7,7 @@ import {
   Users,
   UserPlus,
   DoorOpen,
+  FileBarChart,
   Menu,
   ChevronLeft,
   LogOut
@@ -30,7 +31,8 @@ export default function Sidebar() {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Rooms", href: "/rooms", icon: DoorOpen },
     { name: "Tenants", href: "/tenants", icon: Users },
-    { name: "Add Tenant", href: "/add-tenant", icon: UserPlus }
+    { name: "Add Tenant", href: "/add-tenant", icon: UserPlus },
+    { name: "Reports", href: "/reports", icon: FileBarChart }
   ];
 
   return (
