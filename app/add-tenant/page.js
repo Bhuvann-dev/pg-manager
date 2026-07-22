@@ -8,12 +8,14 @@ import {
 
 import {
   addTenant,
-  getTenants
+  getTenants,
+  updateTenant
 } from "../../services/tenantService";
 import {
   getRooms,
   computeOccupancy
 } from "../../services/roomService";
+import { uploadDocument } from "../../services/storageService";
 import { useAuth } from "../../contexts/AuthContext";
 import * as XLSX from "xlsx";
 
@@ -377,47 +379,10 @@ export default function AddTenantPage() {
 
       setLoading(true);
 
-      let aadhaarPath = null;
-
       /*
-      Upload Aadhaar file if present
+      Create the tenant first so we have an id to scope the ID document's
+      Storage path to. Then upload the document (if any) and attach it.
       */
-
-      if (aadhaarFile) {
-
-        const formData = new FormData();
-
-        formData.append("file", aadhaarFile);
-
-        const res = await fetch(
-          "/api/upload",
-          {
-            method: "POST",
-            body: formData
-          }
-        );
-
-        if (!res.ok) {
-
-          setErrors((prev) => ({
-            ...prev,
-            aadhaarFile:
-              "Upload failed"
-          }));
-
-          setLoading(false);
-
-          return;
-
-        }
-
-        const data =
-          await res.json();
-
-        aadhaarPath =
-          data.filePath;
-
-      }
 
       const tenant = {
 
@@ -433,8 +398,7 @@ export default function AddTenantPage() {
         dueDate:
           parseInt(dueDate, 10),
 
-        aadhaarFile:
-          aadhaarPath || null,
+        aadhaarPath: null,
 
         status: "active",
 
@@ -443,13 +407,41 @@ export default function AddTenantPage() {
 
       };
 
-      const success =
+      const newId =
         await addTenant(
           tenant,
           user.uid
         );
 
-      if (success) {
+      if (newId && aadhaarFile) {
+
+        const path =
+          await uploadDocument(
+            aadhaarFile,
+            user.uid,
+            newId
+          );
+
+        if (path) {
+
+          await updateTenant(
+            newId,
+            { aadhaarPath: path }
+          );
+
+        } else {
+
+          setErrors((prev) => ({
+            ...prev,
+            aadhaarFile:
+              "Tenant saved, but the document upload failed."
+          }));
+
+        }
+
+      }
+
+      if (newId) {
 
         /*
         Reset form

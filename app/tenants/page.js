@@ -14,6 +14,11 @@ import {
   getPayments,
   deletePayment
 } from "../../services/paymentService";
+import {
+  uploadDocument,
+  getDocumentUrl,
+  isStoragePath
+} from "../../services/storageService";
 import { Search, AlertTriangle, History } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -159,6 +164,30 @@ export default function TenantsPage() {
     };
 
   /*
+  VIEW ID DOCUMENT — fetch a short-lived authenticated URL on demand.
+  Legacy records stored a public "/uploads/..." path; open those directly.
+  */
+
+  const handleViewDocument = async (value) => {
+
+    if (!value) return;
+
+    if (!isStoragePath(value)) {
+      window.open(value, "_blank");
+      return;
+    }
+
+    const url = await getDocumentUrl(value);
+
+    if (url) {
+      window.open(url, "_blank");
+    } else {
+      alert("Could not open the document.");
+    }
+
+  };
+
+  /*
   LEDGER — a tenant's payment history (newest first)
   */
 
@@ -237,38 +266,34 @@ export default function TenantsPage() {
     try {
 
       /*
-      Upload new Aadhaar if needed
+      Upload a new ID document to private Storage if the owner picked one.
       */
 
       let aadhaarPath =
-        editingTenant.aadhaarFile || null;
+        editingTenant.aadhaarPath ||
+        editingTenant.aadhaarFile ||
+        null;
 
       if (editingTenant.newAadhaarFile) {
 
-        const formData =
-          new FormData();
-
-        formData.append(
-          "file",
-          editingTenant.newAadhaarFile
-        );
-
-        const res =
-          await fetch(
-            "/api/upload",
-            {
-              method: "POST",
-              body: formData
-            }
+        const path =
+          await uploadDocument(
+            editingTenant.newAadhaarFile,
+            user.uid,
+            editingTenant.id
           );
 
-        if (res.ok) {
+        if (path) {
 
-          const data =
-            await res.json();
+          aadhaarPath = path;
 
-          aadhaarPath =
-            data.filePath;
+        } else {
+
+          alert(
+            "Document upload failed. Other changes were not saved."
+          );
+
+          return;
 
         }
 
@@ -303,7 +328,7 @@ export default function TenantsPage() {
             )
             : null,
 
-        aadhaarFile:
+        aadhaarPath:
           aadhaarPath
 
       };
@@ -652,20 +677,19 @@ export default function TenantsPage() {
 
                       <td className="p-3">
 
-                        {tenant.aadhaarFile ? (
+                        {(tenant.aadhaarPath || tenant.aadhaarFile) ? (
 
-                          <a
-                            href={
-                              tenant.aadhaarFile.startsWith("/")
-                                ? tenant.aadhaarFile
-                                : `/uploads/aadhaar/${tenant.aadhaarFile}`
+                          <button
+                            onClick={() =>
+                              handleViewDocument(
+                                tenant.aadhaarPath ||
+                                  tenant.aadhaarFile
+                              )
                             }
-                            target="_blank"
-                            rel="noopener noreferrer"
                             className="text-blue-400 underline"
                           >
                             View
-                          </a>
+                          </button>
 
                         ) : "-"
 
@@ -969,16 +993,19 @@ export default function TenantsPage() {
 
             <div className="mb-3">
 
-              {editingTenant.aadhaarFile ? (
+              {(editingTenant.aadhaarPath || editingTenant.aadhaarFile) ? (
 
-                <a
-                  href={editingTenant.aadhaarFile}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() =>
+                    handleViewDocument(
+                      editingTenant.aadhaarPath ||
+                        editingTenant.aadhaarFile
+                    )
+                  }
                   className="text-blue-400 underline"
                 >
                   View Current Document
-                </a>
+                </button>
 
               ) : (
 

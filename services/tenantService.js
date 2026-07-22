@@ -23,14 +23,16 @@ ADD TENANT
 
 export const addTenant = async (tenant, ownerId) => {
   try {
-    await addDoc(collection(db, "tenants"), {
+    const docRef = await addDoc(collection(db, "tenants"), {
       ...tenant,
       ownerId
     });
-    return true;
+    // Return the new id so callers can attach an ID document to its
+    // owner-scoped Storage path. Truthy, so existing `if (success)` holds.
+    return docRef.id;
   } catch (error) {
     console.error("Error adding tenant:", error);
-    return false;
+    return null;
   }
 };
 
