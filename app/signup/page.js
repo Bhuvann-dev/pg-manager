@@ -147,8 +147,26 @@ function friendlyError(err) {
   if (code.includes("weak-password")) {
     return "Password is too weak — use at least 6 characters.";
   }
-  if (code.includes("popup-closed")) {
+  if (
+    code.includes("operation-not-allowed") ||
+    code.includes("admin-restricted-operation")
+  ) {
+    return "Email/password sign-in is not enabled for this project. Enable it in Firebase Console → Authentication → Sign-in method.";
+  }
+  if (
+    code.includes("configuration-not-found") ||
+    code.includes("api-key-not-valid")
+  ) {
+    return "Firebase auth isn't configured. Check your .env.local values and that Authentication is enabled in the Firebase console.";
+  }
+  if (code.includes("network-request-failed")) {
+    return "Network error — check your connection and try again.";
+  }
+  if (code.includes("popup-closed") || code.includes("cancelled-popup")) {
     return "Google sign-in was cancelled.";
   }
-  return "Could not create account. Please try again.";
+
+  // Surface the raw Firebase code so unexpected failures are diagnosable.
+  console.error("Signup error:", err);
+  return `Could not create account${code ? ` (${code})` : ""}. Please try again.`;
 }
