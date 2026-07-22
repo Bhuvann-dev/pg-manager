@@ -1,19 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
   UserPlus,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/login");
+  };
 
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -76,6 +85,24 @@ export default function Sidebar() {
         })}
 
       </nav>
+
+      {/* Owner + logout */}
+      <div className="p-2 border-t border-slate-800">
+        {!collapsed && user && (
+          <div className="px-3 py-2 text-xs text-gray-400 truncate">
+            {user.email}
+          </div>
+        )}
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full p-3 rounded-lg text-gray-300 hover:bg-slate-800 transition"
+        >
+          <LogOut size={20} />
+
+          {!collapsed && "Sign out"}
+        </button>
+      </div>
     </div>
   );
 }
