@@ -11,12 +11,14 @@ import {
   computeOccupancy
 } from "../../services/roomService";
 import { getTenants } from "../../services/tenantService";
+import { Loading } from "../../components/States";
 
 export default function RoomsPage() {
   const { user } = useAuth();
 
   const [rooms, setRooms] = useState([]);
   const [tenants, setTenants] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [roomNumber, setRoomNumber] = useState("");
   const [capacity, setCapacity] = useState("");
@@ -32,12 +34,14 @@ export default function RoomsPage() {
 
   const loadData = async () => {
     if (!user) return;
+    setLoading(true);
     const [roomData, tenantData] = await Promise.all([
       getRooms(user.uid),
       getTenants(user.uid)
     ]);
     setRooms(roomData);
     setTenants(tenantData);
+    setLoading(false);
   };
 
   /*
@@ -217,7 +221,9 @@ export default function RoomsPage() {
       </div>
 
       {/* Room list */}
-      {rooms.length === 0 ? (
+      {loading ? (
+        <Loading label="Loading rooms…" />
+      ) : rooms.length === 0 ? (
         <div className="text-gray-400 text-center py-10">
           No rooms yet. Add your first room above.
         </div>
