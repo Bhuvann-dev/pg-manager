@@ -1,6 +1,6 @@
 # PG Manager — Product Requirements Document (PRD)
 
-**Author:** Arpitha N · **Status:** Draft v1 (MVP) · **Last updated:** 2026-07-22
+**Author:** Bhuvan N · **Status:** Draft v1 (MVP) · **Last updated:** 2026-07-22
 
 ---
 

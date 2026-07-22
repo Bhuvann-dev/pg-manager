@@ -136,4 +136,4 @@ See the full breakdown in [GitHub Issues](../../issues).
 
 ## License
 
-MIT © 2026 Arpitha N
+MIT © 2026 Bhuvan N
