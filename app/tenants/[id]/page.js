@@ -8,13 +8,17 @@ import {
   Phone,
   MessageCircle,
   FileText,
-  LogOut
+  LogOut,
+  DoorOpen
 } from "lucide-react";
 import {
   getTenant,
+  getTenants,
   openWhatsApp,
-  deactivateTenant
+  deactivateTenant,
+  updateTenant
 } from "../../../services/tenantService";
+import { getRooms, computeOccupancy } from "../../../services/roomService";
 import {
   getPayments,
   recordPayment,
@@ -57,7 +61,12 @@ export default function TenantDetailPage() {
 
   const [tenant, setTenant] = useState(null);
   const [payments, setPayments] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [allTenants, setAllTenants] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [showMove, setShowMove] = useState(false);
+  const [moveRoom, setMoveRoom] = useState("");
 
   const [showPay, setShowPay] = useState(false);
   const [payAmount, setPayAmount] = useState("");
@@ -76,14 +85,45 @@ export default function TenantDetailPage() {
   const load = async () => {
     setLoading(true);
 
-    const [t, allPayments] = await Promise.all([
+    const [t, allPayments, roomData, tenantData] = await Promise.all([
       getTenant(tenantId, user.uid),
-      getPayments(user.uid)
+      getPayments(user.uid),
+      getRooms(user.uid),
+      getTenants(user.uid)
     ]);
 
     setTenant(t);
     setPayments(allPayments.filter((p) => p.tenantId === tenantId));
+    setRooms(roomData);
+    setAllTenants(tenantData.filter((x) => x.status !== "inactive"));
     setLoading(false);
+  };
+
+  const handleMoveRoom = async () => {
+    if (!moveRoom || moveRoom === tenant.roomNumber) {
+      setShowMove(false);
+      return;
+    }
+
+    const target = rooms.find(
+      (r) => String(r.roomNumber) === String(moveRoom)
+    );
+
+    if (target) {
+      const occupancy = computeOccupancy(target, allTenants);
+      if (occupancy >= (Number(target.capacity) || 0)) {
+        alert(`Room ${target.roomNumber} is full.`);
+        return;
+      }
+    }
+
+    const ok = await updateTenant(tenant.id, { roomNumber: moveRoom });
+    if (ok) {
+      setShowMove(false);
+      await load();
+    } else {
+      alert("Could not move the tenant.");
+    }
   };
 
   const openPay = () => {
@@ -372,6 +412,16 @@ export default function TenantDetailPage() {
             </button>
 
             <button
+              onClick={() => {
+                setMoveRoom(tenant.roomNumber);
+                setShowMove(true);
+              }}
+              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 transition px-4 py-2 rounded-lg text-sm"
+            >
+              <DoorOpen size={16} /> Move room
+            </button>
+
+            <button
               onClick={handleViewDocument}
               disabled={!hasDoc}
               className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 transition px-4 py-2 rounded-lg text-sm disabled:opacity-50"
@@ -477,6 +527,77 @@ export default function TenantDetailPage() {
               </button>
               <button
                 onClick={() => setShowPay(false)}
+                className="px-4 py-2 bg-gray-600 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Move room modal */}
+      {showMove && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
+          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-1">Move Room</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              {tenant.name} · currently Room {tenant.roomNumber}
+            </p>
+
+            {rooms.length === 0 ? (
+              <p className="text-yellow-400 text-sm mb-4">
+                No rooms defined yet.
+              </p>
+            ) : (
+              <>
+                <label className="text-sm text-gray-400">New room</label>
+                <select
+                  value={moveRoom}
+                  onChange={(e) => setMoveRoom(e.target.value)}
+                  className="w-full p-3 mt-1 mb-5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                >
+                  {rooms
+                    .slice()
+                    .sort((a, b) =>
+                      String(a.roomNumber).localeCompare(
+                        String(b.roomNumber),
+                        undefined,
+                        { numeric: true }
+                      )
+                    )
+                    .map((r) => {
+                      const occ = computeOccupancy(r, allTenants);
+                      const isCurrent =
+                        String(r.roomNumber) === String(tenant.roomNumber);
+                      const full =
+                        !isCurrent && occ >= (Number(r.capacity) || 0);
+
+                      return (
+                        <option
+                          key={r.id}
+                          value={r.roomNumber}
+                          disabled={full}
+                        >
+                          Room {r.roomNumber} — {occ}/{r.capacity}
+                          {isCurrent ? " (current)" : full ? " (full)" : ""}
+                        </option>
+                      );
+                    })}
+                </select>
+              </>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleMoveRoom}
+                disabled={rooms.length === 0}
+                className="px-4 py-2 bg-green-600 rounded disabled:opacity-50"
+              >
+                Move
+              </button>
+              <button
+                onClick={() => setShowMove(false)}
                 className="px-4 py-2 bg-gray-600 rounded"
               >
                 Cancel
