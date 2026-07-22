@@ -123,10 +123,13 @@ and deploy the security rules in [`firestore.rules`](firestore.rules) and
 - [x] Rooms & beds with live occupancy / vacancy
 - [x] Per-tenant rent ledger (payment history, not just a paid flag)
 - [x] Secure ID documents in Firebase Storage with per-owner rules
+- [x] Partial payments & security-deposit tracking
+- [x] Tenant detail page with quick actions and room transfer
+- [x] Dashboard collection insights + follow-up list
+- [x] Monthly rent report with Excel / PDF export
 - [ ] Deployed public demo
-- [ ] Partial payments & deposit tracking
-- [ ] Monthly rent report / export
 - [ ] Multi-property support per owner
+- [ ] Automated recurring reminders
 
 See the full breakdown in [GitHub Issues](../../issues).
 
