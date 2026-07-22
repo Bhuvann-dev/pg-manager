@@ -59,6 +59,20 @@ export const getPayments = async (ownerId) => {
 };
 
 /*
+DELETE A SINGLE PAYMENT BY ID (correct one ledger entry)
+*/
+
+export const deletePaymentById = async (paymentId) => {
+  try {
+    await deleteDoc(doc(db, "payments", paymentId));
+    return true;
+  } catch (error) {
+    console.error("Delete payment error:", error);
+    return false;
+  }
+};
+
+/*
 DELETE A PAYMENT (correct a mistake) for a tenant + month + year
 */
 

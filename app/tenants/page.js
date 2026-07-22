@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import {
   getTenants,
@@ -12,42 +13,43 @@ import {
 import {
   recordPayment,
   getPayments,
-  deletePayment
+  deletePaymentById
 } from "../../services/paymentService";
 import {
   uploadDocument,
   getDocumentUrl,
   isStoragePath
 } from "../../services/storageService";
-import { Search, AlertTriangle, History } from "lucide-react";
+import {
+  rentStatus,
+  RENT,
+  MONTH_NAMES,
+  formatPaidDate
+} from "../../lib/rent";
+import { Loading, EmptyState, SkeletonRows } from "../../components/States";
+import { Search, AlertTriangle, History, Users } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
-
-const formatPaidDate = (paidDate) => {
-  if (!paidDate) return "";
-  // Firestore Timestamp has toDate(); a JS Date does not.
-  const d =
-    typeof paidDate.toDate === "function"
-      ? paidDate.toDate()
-      : new Date(paidDate);
-  return Number.isNaN(d.getTime())
-    ? ""
-    : d.toLocaleDateString("en-IN");
+const STATUS_STYLES = {
+  paid: "text-green-400",
+  partial: "text-amber-400",
+  overdue: "text-red-400",
+  pending: "text-yellow-400"
 };
 
 export default function TenantsPage() {
-
   const { user } = useAuth();
 
   const [tenants, setTenants] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [editingTenant, setEditingTenant] = useState(null);
   const [ledgerTenant, setLedgerTenant] = useState(null);
+
+  // Record-payment modal
+  const [payingTenant, setPayingTenant] = useState(null);
+  const [payAmount, setPayAmount] = useState("");
 
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -57,111 +59,65 @@ export default function TenantsPage() {
   useEffect(() => {
     if (!user) return;
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadData = async () => {
-
     if (!user) return;
+    setLoading(true);
 
-    const tenantData =
-      await getTenants(user.uid);
+    const [tenantData, paymentData] = await Promise.all([
+      getTenants(user.uid),
+      getPayments(user.uid)
+    ]);
 
-    const paymentData =
-      await getPayments(user.uid);
-
-    setTenants(
-      tenantData.filter(
-        (t) =>
-          t.status !== "inactive"
-      )
-    );
-
+    setTenants(tenantData.filter((t) => t.status !== "inactive"));
     setPayments(paymentData);
-
+    setLoading(false);
   };
 
   const today = new Date();
 
-  const currentDay =
-    today.getDate();
-
-  const currentMonth =
-    today.getMonth() + 1;
-
-  const currentYear =
-    today.getFullYear();
-
-  const isPaid = (tenantId) => {
-    return payments.some(
-      (p) =>
-        p.tenantId === tenantId &&
-        p.month === currentMonth &&
-        p.year === currentYear
-    );
-  };
-
-  const isOverdue = (tenant) => {
-
-    const paid =
-      isPaid(tenant.id);
-
-    if (paid) return false;
-
-    return (
-      Number.isFinite(
-        tenant.dueDate
-      ) &&
-      tenant.dueDate <
-      currentDay
-    );
-
-  };
-
   /*
-  MARK PAID
+  RECORD PAYMENT (supports partial amounts)
   */
 
-  const handlePayment =
-    async (tenant) => {
+  const openPayModal = (tenant) => {
+    const { balance, rent } = rentStatus(tenant, payments, today);
+    setPayAmount(String(balance > 0 ? balance : rent));
+    setPayingTenant(tenant);
+  };
 
-      const confirmPay =
-        window.confirm(
-          "Mark this tenant as paid?"
-        );
+  const handleRecordPayment = async () => {
+    const amount = parseInt(payAmount, 10);
 
-      if (!confirmPay)
-        return;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      alert("Enter a valid amount.");
+      return;
+    }
 
-      const payment = {
-
-        tenantId: tenant.id,
-        tenantName: tenant.name,
-        amount: tenant.rentAmount,
-
-        month: currentMonth,
-        year: currentYear,
-
+    const success = await recordPayment(
+      {
+        tenantId: payingTenant.id,
+        tenantName: payingTenant.name,
+        type: RENT,
+        amount,
+        month: today.getMonth() + 1,
+        year: today.getFullYear(),
         status: "paid",
+        paidDate: new Date()
+      },
+      user.uid
+    );
 
-        paidDate:
-          new Date()
-
-      };
-
-      const success =
-        await recordPayment(payment, user.uid);
-
-      if (success) {
-
-        alert(
-          "Payment recorded"
-        );
-
-        loadData();
-
-      }
-
-    };
+    if (success) {
+      setPayingTenant(null);
+      setPayAmount("");
+      await loadData();
+    } else {
+      alert("Could not record the payment.");
+    }
+  };
 
   /*
   VIEW ID DOCUMENT — fetch a short-lived authenticated URL on demand.
@@ -169,7 +125,6 @@ export default function TenantsPage() {
   */
 
   const handleViewDocument = async (value) => {
-
     if (!value) return;
 
     if (!isStoragePath(value)) {
@@ -178,13 +133,11 @@ export default function TenantsPage() {
     }
 
     const url = await getDocumentUrl(value);
-
     if (url) {
       window.open(url, "_blank");
     } else {
       alert("Could not open the document.");
     }
-
   };
 
   /*
@@ -194,313 +147,130 @@ export default function TenantsPage() {
   const tenantLedger = (tenantId) =>
     payments
       .filter((p) => p.tenantId === tenantId)
-      .sort(
-        (a, b) =>
-          (b.year - a.year) || (b.month - a.month)
-      );
+      .sort((a, b) => (b.year - a.year) || (b.month - a.month));
 
   const handleRemovePayment = async (payment) => {
+    const label = `${MONTH_NAMES[payment.month - 1]} ${payment.year}`;
 
-    const label =
-      `${MONTH_NAMES[payment.month - 1]} ${payment.year}`;
-
-    const confirmRemove =
-      window.confirm(
-        `Remove the payment for ${label}? This corrects a mistaken entry.`
-      );
-
-    if (!confirmRemove) return;
-
-    const success =
-      await deletePayment(
-        user.uid,
-        payment.tenantId,
-        payment.month,
-        payment.year
-      );
-
-    if (success) {
-      await loadData();
+    if (
+      !window.confirm(
+        `Remove the ₹${payment.amount} entry for ${label}? This corrects a mistaken entry.`
+      )
+    ) {
+      return;
     }
 
+    if (await deletePaymentById(payment.id)) {
+      await loadData();
+    }
   };
 
   /*
   TENANT LEFT
   */
 
-  const handleDeactivate =
-    async (tenant) => {
+  const handleDeactivate = async (tenant) => {
+    if (!window.confirm("Are you sure this tenant left?")) return;
 
-      const confirmLeave =
-        window.confirm(
-          "Are you sure this tenant left?"
-        );
-
-      if (!confirmLeave)
-        return;
-
-      const success =
-        await deactivateTenant(
-          tenant
-        );
-
-      if (success) {
-
-        alert(
-          "Tenant marked as left"
-        );
-
-        loadData();
-
-      }
-
-    };
+    if (await deactivateTenant(tenant)) {
+      alert("Tenant marked as left");
+      loadData();
+    }
+  };
 
   /*
   EDIT SAVE
   */
 
   const handleSaveEdit = async () => {
-
     try {
-
-      /*
-      Upload a new ID document to private Storage if the owner picked one.
-      */
-
       let aadhaarPath =
-        editingTenant.aadhaarPath ||
-        editingTenant.aadhaarFile ||
-        null;
+        editingTenant.aadhaarPath || editingTenant.aadhaarFile || null;
 
       if (editingTenant.newAadhaarFile) {
-
-        const path =
-          await uploadDocument(
-            editingTenant.newAadhaarFile,
-            user.uid,
-            editingTenant.id
-          );
+        const path = await uploadDocument(
+          editingTenant.newAadhaarFile,
+          user.uid,
+          editingTenant.id
+        );
 
         if (path) {
-
           aadhaarPath = path;
-
         } else {
-
-          alert(
-            "Document upload failed. Other changes were not saved."
-          );
-
+          alert("Document upload failed. Other changes were not saved.");
           return;
-
         }
-
       }
-
-      /*
-      Update tenant info
-      */
 
       const updatedTenant = {
-
-        name:
-          editingTenant.name,
-
-        phone:
-          editingTenant.phone,
-
-        roomNumber:
-          editingTenant.roomNumber,
-
-        rentAmount:
-          parseInt(
-            editingTenant.rentAmount,
-            10
-          ),
-
-        dueDate:
-          editingTenant.dueDate
-            ? parseInt(
-              editingTenant.dueDate,
-              10
-            )
-            : null,
-
-        aadhaarPath:
-          aadhaarPath
-
+        name: editingTenant.name,
+        phone: editingTenant.phone,
+        roomNumber: editingTenant.roomNumber,
+        rentAmount: parseInt(editingTenant.rentAmount, 10),
+        dueDate: editingTenant.dueDate
+          ? parseInt(editingTenant.dueDate, 10)
+          : null,
+        aadhaarPath
       };
 
-      const success =
-        await updateTenant(
-          editingTenant.id,
-          updatedTenant
-        );
+      const success = await updateTenant(editingTenant.id, updatedTenant);
 
       if (!success) {
-
-        alert(
-          "Update failed"
-        );
-
+        alert("Update failed");
         return;
-
       }
-
-      /*
-      PAYMENT STATUS FIX
-      */
-
-      await deletePayment(
-        user.uid,
-        editingTenant.id,
-        currentMonth,
-        currentYear
-      );
-
-      if (
-        editingTenant.paymentStatus ===
-        "paid"
-      ) {
-
-        await recordPayment({
-
-          tenantId:
-            editingTenant.id,
-
-          tenantName:
-            editingTenant.name,
-
-          amount:
-            editingTenant.rentAmount,
-
-          month:
-            currentMonth,
-
-          year:
-            currentYear,
-
-          status:
-            "paid",
-
-          paidDate:
-            new Date()
-
-        }, user.uid);
-
-      }
-
-      alert(
-        "Tenant updated"
-      );
 
       setEditingTenant(null);
-
-      /*
-      IMPORTANT — reload fresh data
-      */
-
       await loadData();
-
     } catch (error) {
-
       console.error(error);
-
-      alert(
-        "Update failed"
-      );
-
+      alert("Update failed");
     }
-
   };
 
-  let filteredTenants =
-    tenants.filter((tenant) => {
-
-      const matchesSearch =
-        tenant.name
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          ) ||
-        tenant.roomNumber
-          .toString()
-          .includes(search);
-
-      const matchesFrom =
-        !fromDate ||
-        (
-          Number.isFinite(
-            tenant.dueDate
-          ) &&
-          tenant.dueDate >=
-          Number(fromDate)
-        );
-
-      const matchesTo =
-        !toDate ||
-        (
-          Number.isFinite(
-            tenant.dueDate
-          ) &&
-          tenant.dueDate <=
-          Number(toDate)
-        );
-
-      return (
-        matchesSearch &&
-        matchesFrom &&
-        matchesTo
-      );
-
-    });
-
   /*
-  Sort
+  FILTER + SORT
   */
 
-  filteredTenants.sort((a, b) => {
+  let filteredTenants = tenants.filter((tenant) => {
+    const matchesSearch =
+      tenant.name.toLowerCase().includes(search.toLowerCase()) ||
+      tenant.roomNumber.toString().includes(search);
 
-    const dueA =
-      Number.isFinite(
-        a.dueDate
-      )
-        ? a.dueDate
-        : 0;
+    const matchesFrom =
+      !fromDate ||
+      (Number.isFinite(tenant.dueDate) &&
+        tenant.dueDate >= Number(fromDate));
 
-    const dueB =
-      Number.isFinite(
-        b.dueDate
-      )
-        ? b.dueDate
-        : 0;
+    const matchesTo =
+      !toDate ||
+      (Number.isFinite(tenant.dueDate) && tenant.dueDate <= Number(toDate));
 
-    return sortOrder === "asc"
-      ? dueA - dueB
-      : dueB - dueA;
-
+    return matchesSearch && matchesFrom && matchesTo;
   });
 
+  filteredTenants.sort((a, b) => {
+    const dueA = Number.isFinite(a.dueDate) ? a.dueDate : 0;
+    const dueB = Number.isFinite(b.dueDate) ? b.dueDate : 0;
+    return sortOrder === "asc" ? dueA - dueB : dueB - dueA;
+  });
+
+  const statusLabel = (s) => {
+    if (s.status === "paid") return "Paid";
+    if (s.status === "partial") return `Partial ₹${s.paid}/₹${s.rent}`;
+    if (s.status === "overdue") return "Overdue";
+    return "Pending";
+  };
+
   return (
-
     <div>
-
       <div className="bg-slate-900 rounded-xl overflow-hidden shadow">
-
         <div className="p-4 border-b border-slate-800 flex flex-col gap-4">
-
-          <h2 className="text-xl font-semibold">
-            Tenants
-          </h2>
+          <h2 className="text-xl font-semibold">Tenants</h2>
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
             {/* Search */}
-
             <div className="relative w-full md:w-72">
-
               <Search
                 size={18}
                 className="absolute left-3 top-3 text-gray-400"
@@ -509,43 +279,21 @@ export default function TenantsPage() {
               <input
                 type="text"
                 placeholder="Search tenant or room"
-
                 value={search}
-
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-
-                className="
-                  w-full
-                  pl-10
-                  pr-3
-                  py-2
-                  rounded-lg
-                  bg-slate-800
-                  border
-                  border-slate-700
-                  text-white
-                "
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
               />
-
             </div>
 
             {/* Filters */}
-
             <div className="flex flex-wrap items-center gap-3 text-sm">
-
-              <span className="text-gray-400">
-                Filter by Due Date:
-              </span>
+              <span className="text-gray-400">Filter by Due Date:</span>
 
               <input
                 type="number"
                 placeholder="From"
                 value={fromDate}
-                onChange={(e) =>
-                  setFromDate(e.target.value)
-                }
+                onChange={(e) => setFromDate(e.target.value)}
                 className="bg-slate-800 px-3 py-2 rounded-lg w-24"
               />
 
@@ -553,92 +301,86 @@ export default function TenantsPage() {
                 type="number"
                 placeholder="To"
                 value={toDate}
-                onChange={(e) =>
-                  setToDate(e.target.value)
-                }
+                onChange={(e) => setToDate(e.target.value)}
                 className="bg-slate-800 px-3 py-2 rounded-lg w-24"
               />
 
               <select
                 value={sortOrder}
-                onChange={(e) =>
-                  setSortOrder(e.target.value)
-                }
+                onChange={(e) => setSortOrder(e.target.value)}
                 className="bg-slate-800 px-3 py-2 rounded-lg"
               >
-                <option value="asc">
-                  Due Date ↑
-                </option>
-
-                <option value="desc">
-                  Due Date ↓
-                </option>
+                <option value="asc">Due Date ↑</option>
+                <option value="desc">Due Date ↓</option>
               </select>
-
             </div>
-
           </div>
-
         </div>
 
-        <div className="overflow-x-auto">
+        {loading ? (
+          <SkeletonRows rows={5} cols={7} />
+        ) : filteredTenants.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title={tenants.length === 0 ? "No tenants yet" : "No matches"}
+            message={
+              tenants.length === 0
+                ? "Add your first tenant to start tracking rent."
+                : "Try clearing the search or due-date filters."
+            }
+            action={
+              tenants.length === 0 ? (
+                <Link
+                  href="/add-tenant"
+                  className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-lg font-medium"
+                >
+                  Add Tenant
+                </Link>
+              ) : null
+            }
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-800">
+                <tr>
+                  <th className="p-3 text-left">Name</th>
+                  <th className="p-3 text-left">Room</th>
+                  <th className="p-3 text-left">Rent</th>
+                  <th className="p-3 text-left">Due</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Aadhaar</th>
+                  <th className="p-3 text-left">Actions</th>
+                </tr>
+              </thead>
 
-          <table className="w-full text-sm">
-
-            <thead className="bg-slate-800">
-
-              <tr>
-                <th className="p-3 text-left">Name</th>
-                <th className="p-3 text-left">Room</th>
-                <th className="p-3 text-left">Rent</th>
-                <th className="p-3 text-left">Due</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Aadhaar</th>
-                <th className="p-3 text-left">Actions</th>
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {filteredTenants.map(
-                (tenant) => {
-
-                  const paid =
-                    isPaid(tenant.id);
+              <tbody>
+                {filteredTenants.map((tenant) => {
+                  const s = rentStatus(tenant, payments, today);
+                  const settled = s.status === "paid";
 
                   return (
-
                     <tr
                       key={tenant.id}
-                      className={`border-b border-slate-800 transition
-
-                        ${isOverdue(tenant)
+                      className={`border-b border-slate-800 transition ${
+                        s.status === "overdue"
                           ? "bg-red-900/30 hover:bg-red-900/40"
                           : "hover:bg-slate-800"
-                        }
-
-                      `}
+                      }`}
                     >
-
                       <td className="p-3">
-                        {tenant.name}
+                        <Link
+                          href={`/tenants/${tenant.id}`}
+                          className="text-blue-400 hover:underline font-medium"
+                        >
+                          {tenant.name}
+                        </Link>
                       </td>
 
-                      <td className="p-3">
-                        {
-                          tenant.roomNumber
-                        }
-                      </td>
+                      <td className="p-3">{tenant.roomNumber}</td>
 
                       <td className="p-3">
-                        ₹
-                        {
-                          Math.max(
-                            tenant.rentAmount,
-                            0
-                          )
-                        }
+                        ₹{Math.max(tenant.rentAmount, 0)}
                       </td>
 
                       <td className="p-3">
@@ -648,151 +390,139 @@ export default function TenantsPage() {
                       </td>
 
                       <td className="p-3">
-
-                        {isPaid(tenant.id) ? (
-
-                          <span className="text-green-400 font-medium">
-                            Paid
-                          </span>
-
-                        ) : isOverdue(tenant) ? (
-
-                          <span className="flex items-center gap-2 text-red-400 font-medium">
-
+                        <span
+                          className={`flex items-center gap-1 font-medium ${
+                            STATUS_STYLES[s.status]
+                          }`}
+                        >
+                          {s.status === "overdue" && (
                             <AlertTriangle size={16} />
-
-                            Overdue
-
-                          </span>
-
-                        ) : (
-
-                          <span className="text-yellow-400 font-medium">
-                            Pending
-                          </span>
-
-                        )}
-
+                          )}
+                          {statusLabel(s)}
+                        </span>
                       </td>
 
                       <td className="p-3">
-
-                        {(tenant.aadhaarPath || tenant.aadhaarFile) ? (
-
+                        {tenant.aadhaarPath || tenant.aadhaarFile ? (
                           <button
                             onClick={() =>
                               handleViewDocument(
-                                tenant.aadhaarPath ||
-                                  tenant.aadhaarFile
+                                tenant.aadhaarPath || tenant.aadhaarFile
                               )
                             }
                             className="text-blue-400 underline"
                           >
                             View
                           </button>
-
-                        ) : "-"
-
-                        }
-
+                        ) : (
+                          "-"
+                        )}
                       </td>
 
                       <td className="p-3 flex gap-2 flex-wrap">
+                        {!settled && (
+                          <button
+                            onClick={() => openPayModal(tenant)}
+                            className="bg-green-600 px-3 py-1 rounded"
+                          >
+                            Record
+                          </button>
+                        )}
+
+                        {!settled && (
+                          <button
+                            onClick={() => openWhatsApp(tenant)}
+                            className="bg-blue-600 px-3 py-1 rounded"
+                          >
+                            Reminder
+                          </button>
+                        )}
 
                         <button
-                          onClick={() =>
-                            setEditingTenant(
-                              tenant
-                            )
-                          }
-                          className="bg-indigo-600 px-3 py-1 rounded"
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            setLedgerTenant(
-                              tenant
-                            )
-                          }
+                          onClick={() => setLedgerTenant(tenant)}
                           className="bg-slate-600 px-3 py-1 rounded flex items-center gap-1"
                         >
                           <History size={14} />
                           History
                         </button>
 
-                        {!paid && (
-
-                          <button
-                            onClick={() =>
-                              handlePayment(
-                                tenant
-                              )
-                            }
-                            className="bg-green-600 px-3 py-1 rounded"
-                          >
-                            Paid
-                          </button>
-
-                        )}
-
-                        {!paid && (
-
-                          <button
-                            onClick={() =>
-                              openWhatsApp(
-                                tenant
-                              )
-                            }
-                            className="bg-blue-600 px-3 py-1 rounded"
-                          >
-                            Reminder
-                          </button>
-
-                        )}
+                        <button
+                          onClick={() => setEditingTenant(tenant)}
+                          className="bg-indigo-600 px-3 py-1 rounded"
+                        >
+                          Edit
+                        </button>
 
                         <button
-                          onClick={() =>
-                            handleDeactivate(
-                              tenant
-                            )
-                          }
+                          onClick={() => handleDeactivate(tenant)}
                           className="bg-red-600 px-3 py-1 rounded"
                         >
                           Left
                         </button>
-
                       </td>
-
                     </tr>
-
                   );
-
-                }
-
-              )}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
+      {/* RECORD PAYMENT MODAL */}
+      {payingTenant && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
+          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-1">Record Payment</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              {payingTenant.name} ·{" "}
+              {MONTH_NAMES[today.getMonth()]} {today.getFullYear()}
+            </p>
+
+            {(() => {
+              const s = rentStatus(payingTenant, payments, today);
+              return (
+                <p className="text-sm text-gray-400 mb-2">
+                  Rent ₹{s.rent} · Paid ₹{s.paid} · Balance ₹{s.balance}
+                </p>
+              );
+            })()}
+
+            <label className="text-sm text-gray-400">Amount (₹)</label>
+            <input
+              type="number"
+              min={1}
+              autoFocus
+              value={payAmount}
+              onChange={(e) => setPayAmount(e.target.value)}
+              className="w-full p-3 mt-1 mb-5 rounded-lg bg-slate-800 border border-slate-700 text-white"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRecordPayment}
+                className="px-4 py-2 bg-green-600 rounded"
+              >
+                Save Payment
+              </button>
+
+              <button
+                onClick={() => setPayingTenant(null)}
+                className="px-4 py-2 bg-gray-600 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* LEDGER MODAL */}
-
       {ledgerTenant && (
-
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center px-4">
-
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
           <div className="bg-slate-900 p-6 rounded-xl w-full max-w-md">
-
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-xl font-bold">
-                Payment History
-              </h2>
+              <h2 className="text-xl font-bold">Payment History</h2>
 
               <button
                 onClick={() => setLedgerTenant(null)}
@@ -807,25 +537,24 @@ export default function TenantsPage() {
             </p>
 
             {tenantLedger(ledgerTenant.id).length === 0 ? (
-
               <p className="text-gray-400 text-center py-8">
                 No payments recorded yet.
               </p>
-
             ) : (
-
               <div className="max-h-80 overflow-y-auto divide-y divide-slate-800">
-
                 {tenantLedger(ledgerTenant.id).map((p) => (
-
                   <div
                     key={p.id}
                     className="flex items-center justify-between py-3"
                   >
-
                     <div>
-                      <div className="font-medium">
+                      <div className="font-medium flex items-center gap-2">
                         {MONTH_NAMES[p.month - 1]} {p.year}
+                        {p.type === "deposit" && (
+                          <span className="text-xs bg-slate-700 px-2 py-0.5 rounded">
+                            deposit
+                          </span>
+                        )}
                       </div>
 
                       <div className="text-xs text-gray-400">
@@ -845,75 +574,41 @@ export default function TenantsPage() {
                         Remove
                       </button>
                     </div>
-
                   </div>
-
                 ))}
-
               </div>
-
             )}
-
           </div>
-
         </div>
-
       )}
 
       {/* EDIT MODAL */}
-
       {editingTenant && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
+          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-md">
+            <h2 className="text-xl font-bold mb-5">Edit Tenant</h2>
 
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-
-          <div className="bg-slate-900 p-6 rounded-xl w-[420px]">
-
-            <h2 className="text-xl font-bold mb-5">
-              Edit Tenant
-            </h2>
-
-            {/* NAME */}
-
-            <label className="text-sm text-gray-400">
-              Name
-            </label>
-
+            <label className="text-sm text-gray-400">Name</label>
             <input
-              className="w-full p-2 mb-3 bg-slate-800 rounded"
+              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
               value={editingTenant.name}
               onChange={(e) =>
-                setEditingTenant({
-                  ...editingTenant,
-                  name: e.target.value
-                })
+                setEditingTenant({ ...editingTenant, name: e.target.value })
               }
             />
 
-            {/* PHONE */}
-
-            <label className="text-sm text-gray-400">
-              Phone
-            </label>
-
+            <label className="text-sm text-gray-400">Phone</label>
             <input
-              className="w-full p-2 mb-3 bg-slate-800 rounded"
+              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
               value={editingTenant.phone}
               onChange={(e) =>
-                setEditingTenant({
-                  ...editingTenant,
-                  phone: e.target.value
-                })
+                setEditingTenant({ ...editingTenant, phone: e.target.value })
               }
             />
 
-            {/* ROOM */}
-
-            <label className="text-sm text-gray-400">
-              Room Number
-            </label>
-
+            <label className="text-sm text-gray-400">Room Number</label>
             <input
-              className="w-full p-2 mb-3 bg-slate-800 rounded"
+              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
               value={editingTenant.roomNumber}
               onChange={(e) =>
                 setEditingTenant({
@@ -923,15 +618,10 @@ export default function TenantsPage() {
               }
             />
 
-            {/* RENT */}
-
-            <label className="text-sm text-gray-400">
-              Monthly Rent (₹)
-            </label>
-
+            <label className="text-sm text-gray-400">Monthly Rent (₹)</label>
             <input
               type="number"
-              className="w-full p-2 mb-3 bg-slate-800 rounded"
+              className="w-full p-2 mb-3 mt-1 bg-slate-800 rounded"
               value={editingTenant.rentAmount}
               onChange={(e) =>
                 setEditingTenant({
@@ -941,15 +631,10 @@ export default function TenantsPage() {
               }
             />
 
-            {/* DUE DATE */}
-
-            <label className="text-sm text-gray-400">
-              Due Date (1–31)
-            </label>
-
+            <label className="text-sm text-gray-400">Due Date (1–31)</label>
             <input
               type="number"
-              className="w-full p-2 mb-4 bg-slate-800 rounded"
+              className="w-full p-2 mb-4 mt-1 bg-slate-800 rounded"
               value={editingTenant.dueDate}
               onChange={(e) =>
                 setEditingTenant({
@@ -959,113 +644,57 @@ export default function TenantsPage() {
               }
             />
 
-            {/* PAYMENT STATUS */}
-
-            <label className="text-sm text-gray-400">
-              Payment Status (Current Month)
-            </label>
-
-            <select
-              className="w-full p-2 mb-4 bg-slate-800 rounded"
-              value={editingTenant.paymentStatus || "pending"}
-              onChange={(e) =>
-                setEditingTenant({
-                  ...editingTenant,
-                  paymentStatus:
-                    e.target.value
-                })
-              }
-            >
-              <option value="paid">
-                Paid
-              </option>
-
-              <option value="pending">
-                Not Paid
-              </option>
-            </select>
-
-            {/* CURRENT AADHAAR */}
-
-            <label className="text-sm text-gray-400">
-              Aadhaar Document
-            </label>
-
-            <div className="mb-3">
-
-              {(editingTenant.aadhaarPath || editingTenant.aadhaarFile) ? (
-
+            <label className="text-sm text-gray-400">Aadhaar Document</label>
+            <div className="mb-3 mt-1">
+              {editingTenant.aadhaarPath || editingTenant.aadhaarFile ? (
                 <button
                   onClick={() =>
                     handleViewDocument(
-                      editingTenant.aadhaarPath ||
-                        editingTenant.aadhaarFile
+                      editingTenant.aadhaarPath || editingTenant.aadhaarFile
                     )
                   }
                   className="text-blue-400 underline"
                 >
                   View Current Document
                 </button>
-
               ) : (
-
-                <span className="text-gray-400">
-                  No document uploaded
-                </span>
-
+                <span className="text-gray-400">No document uploaded</span>
               )}
-
             </div>
-
-            {/* REPLACE FILE */}
 
             <label className="text-sm text-gray-400">
               Replace Aadhaar (optional)
             </label>
-
             <input
               type="file"
               accept="image/*,.pdf"
               onChange={(e) =>
                 setEditingTenant({
                   ...editingTenant,
-                  newAadhaarFile:
-                    e.target.files[0]
+                  newAadhaarFile: e.target.files[0]
                 })
               }
-              className="mb-5 text-white"
+              className="mb-5 mt-1 text-white"
             />
 
-            {/* BUTTONS */}
-
             <div className="flex gap-3">
-
               <button
                 onClick={handleSaveEdit}
-                className="px-3 py-2 text-sm md:text-base bg-green-600 rounded"
+                className="px-4 py-2 bg-green-600 rounded"
               >
                 Save
               </button>
 
               <button
-                onClick={() =>
-                  setEditingTenant(null)
-                }
-                className="px-3 py-2 text-sm md:text-base bg-gray-600 rounded"
+                onClick={() => setEditingTenant(null)}
+                className="px-4 py-2 bg-gray-600 rounded"
               >
                 Cancel
               </button>
-
             </div>
-
           </div>
-
         </div>
-
       )}
-
     </div>
-
   );
-
 }
