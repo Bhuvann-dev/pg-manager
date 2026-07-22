@@ -3,18 +3,21 @@
 import { useEffect, useState } from "react";
 import { getTenants } from "../services/tenantService";
 import { getPayments } from "../services/paymentService";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [tenants, setTenants] = useState([]);
   const [payments, setPayments] = useState([]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!user) return;
+    loadData(user.uid);
+  }, [user]);
 
-  const loadData = async () => {
-    const tenantData = await getTenants();
-    const paymentData = await getPayments();
+  const loadData = async (ownerId) => {
+    const tenantData = await getTenants(ownerId);
+    const paymentData = await getPayments(ownerId);
 
     setTenants(
       tenantData.filter((t) => t.status !== "inactive")

@@ -10,6 +10,7 @@ import {
   addTenant,
   getTenants
 } from "../../services/tenantService";
+import { useAuth } from "../../contexts/AuthContext";
 import * as XLSX from "xlsx";
 
 /*
@@ -26,6 +27,8 @@ const formatPhone =
       .slice(0, 10);
 
 export default function AddTenantPage() {
+
+  const { user } = useAuth();
 
   /*
   FORM STATE
@@ -83,11 +86,13 @@ export default function AddTenantPage() {
 
   useEffect(() => {
 
+    if (!user) return;
+
     const load =
       async () => {
 
         const data =
-          await getTenants();
+          await getTenants(user.uid);
 
         setTenants(data);
 
@@ -95,7 +100,7 @@ export default function AddTenantPage() {
 
     load();
 
-  }, []);
+  }, [user]);
 
   /*
   VALIDATION
@@ -304,7 +309,8 @@ export default function AddTenantPage() {
 
         const success =
           await addTenant(
-            tenant
+            tenant,
+            user.uid
           );
 
         if (success)
@@ -316,7 +322,7 @@ export default function AddTenantPage() {
         `${successCount} tenants added successfully`
       );
 
-      const updatedTenants = await getTenants();
+      const updatedTenants = await getTenants(user.uid);
       setTenants(updatedTenants);
 
     } catch (error) {
@@ -411,7 +417,8 @@ export default function AddTenantPage() {
 
       const success =
         await addTenant(
-          tenant
+          tenant,
+          user.uid
         );
 
       if (success) {
@@ -435,7 +442,7 @@ export default function AddTenantPage() {
         */
 
         const data =
-          await getTenants();
+          await getTenants(user.uid);
 
         setTenants(data);
 

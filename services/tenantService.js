@@ -3,19 +3,30 @@ import {
   collection,
   addDoc,
   getDocs,
+  query,
+  where,
   doc,
   updateDoc
 } from "firebase/firestore";
 
+/*
+All tenant data is scoped to the signed-in owner (ownerId === auth.uid).
+Every write stamps ownerId; every read filters by it. The Firestore
+security rules enforce the same predicate server-side, so isolation holds
+even though the browser talks to the database directly.
+See docs/decisions.md ADR-002.
+*/
 
 /*
 ADD TENANT
 */
 
-export const addTenant = async (tenant) => {
+export const addTenant = async (tenant, ownerId) => {
   try {
-    await addDoc(collection(db, "tenants"), tenant);
-    console.log("Tenant added successfully");
+    await addDoc(collection(db, "tenants"), {
+      ...tenant,
+      ownerId
+    });
     return true;
   } catch (error) {
     console.error("Error adding tenant:", error);
@@ -24,19 +35,24 @@ export const addTenant = async (tenant) => {
 };
 
 /*
-GET ALL TENANTS
+GET ALL TENANTS FOR THIS OWNER
 */
 
-export const getTenants = async () => {
+export const getTenants = async (ownerId) => {
   try {
-    const snapshot = await getDocs(collection(db, "tenants"));
+    if (!ownerId) return [];
 
-    const tenants = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
+    const q = query(
+      collection(db, "tenants"),
+      where("ownerId", "==", ownerId)
+    );
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data()
     }));
-
-    return tenants;
   } catch (error) {
     console.error("Error fetching tenants:", error);
     return [];
@@ -86,89 +102,43 @@ TENANT LEFT / DEACTIVATE
 */
 
 export const deactivateTenant = async (tenant) => {
-
   try {
-
     if (!tenant || !tenant.id) {
-
-      console.error(
-        "Invalid tenant data"
-      );
-
+      console.error("Invalid tenant data");
       return false;
-
     }
 
-    const tenantRef =
-      doc(
-        db,
-        "tenants",
-        tenant.id
-      );
+    const tenantRef = doc(db, "tenants", tenant.id);
 
-    await updateDoc(
-      tenantRef,
-      {
-        status: "inactive",
-        leftDate:
-          new Date()
-      }
-    );
+    await updateDoc(tenantRef, {
+      status: "inactive",
+      leftDate: new Date()
+    });
 
     return true;
-
   } catch (error) {
-
-    console.error(
-      "Deactivate error:",
-      error
-    );
-
+    console.error("Deactivate error:", error);
     return false;
-
   }
-
 };
 
-export const updateTenant = async (
-  tenantId,
-  data
-) => {
+/*
+UPDATE TENANT
+*/
 
+export const updateTenant = async (tenantId, data) => {
   try {
-
-    const cleanData =
-      Object.fromEntries(
-        Object.entries(data)
-          .filter(
-            ([_, v]) =>
-              v !== undefined
-          )
-      );
-
-    const tenantRef =
-      doc(
-        db,
-        "tenants",
-        tenantId
-      );
-
-    await updateDoc(
-      tenantRef,
-      cleanData
+    const cleanData = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== undefined)
     );
+
+    const tenantRef = doc(db, "tenants", tenantId);
+
+    await updateDoc(tenantRef, cleanData);
 
     return true;
-
   } catch (error) {
-
-    console.error(
-      "Update error:",
-      error
-    );
-
+    console.error("Update error:", error);
     return false;
-
   }
-
 };

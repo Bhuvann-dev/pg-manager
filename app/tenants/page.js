@@ -15,8 +15,11 @@ import {
   deletePayment
 } from "../../services/paymentService";
 import { Search, AlertTriangle } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function TenantsPage() {
+
+  const { user } = useAuth();
 
   const [tenants, setTenants] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -29,16 +32,19 @@ export default function TenantsPage() {
   const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
+    if (!user) return;
     loadData();
-  }, []);
+  }, [user]);
 
   const loadData = async () => {
 
+    if (!user) return;
+
     const tenantData =
-      await getTenants();
+      await getTenants(user.uid);
 
     const paymentData =
-      await getPayments();
+      await getPayments(user.uid);
 
     setTenants(
       tenantData.filter(
@@ -120,7 +126,7 @@ export default function TenantsPage() {
       };
 
       const success =
-        await recordPayment(payment);
+        await recordPayment(payment, user.uid);
 
       if (success) {
 
@@ -267,6 +273,7 @@ export default function TenantsPage() {
       */
 
       await deletePayment(
+        user.uid,
         editingTenant.id,
         currentMonth,
         currentYear
@@ -300,7 +307,7 @@ export default function TenantsPage() {
           paidDate:
             new Date()
 
-        });
+        }, user.uid);
 
       }
 

@@ -1,10 +1,31 @@
 import { db } from "../lib/firebase";
-import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc,
+  doc
+} from "firebase/firestore";
 
-export const recordPayment = async (payment) => {
+/*
+Payments are an append-only rent ledger, scoped to the signed-in owner.
+A tenant's status for a month is derived by checking whether a matching
+payment exists — there is no boolean "paid" flag. See docs/decisions.md
+ADR-003.
+*/
+
+/*
+RECORD A PAYMENT
+*/
+
+export const recordPayment = async (payment, ownerId) => {
   try {
-    await addDoc(collection(db, "payments"), payment);
-    console.log("Payment recorded successfully");
+    await addDoc(collection(db, "payments"), {
+      ...payment,
+      ownerId
+    });
     return true;
   } catch (error) {
     console.error("Error recording payment:", error);
@@ -12,75 +33,56 @@ export const recordPayment = async (payment) => {
   }
 };
 
-export const getPayments = async () => {
+/*
+GET ALL PAYMENTS FOR THIS OWNER
+*/
+
+export const getPayments = async (ownerId) => {
   try {
-    const snapshot = await getDocs(collection(db, "payments"));
+    if (!ownerId) return [];
 
-    const payments = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
+    const q = query(
+      collection(db, "payments"),
+      where("ownerId", "==", ownerId)
+    );
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data()
     }));
-
-    return payments;
   } catch (error) {
     console.error("Error fetching payments:", error);
     return [];
   }
 };
 
-export const deletePayment = async (
-  tenantId,
-  month,
-  year
-) => {
+/*
+DELETE A PAYMENT (correct a mistake) for a tenant + month + year
+*/
 
+export const deletePayment = async (ownerId, tenantId, month, year) => {
   try {
+    if (!ownerId) return false;
 
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "payments"
-        )
-      );
+    const q = query(
+      collection(db, "payments"),
+      where("ownerId", "==", ownerId),
+      where("tenantId", "==", tenantId),
+      where("month", "==", month),
+      where("year", "==", year)
+    );
 
-    for (
-      const paymentDoc
-      of snapshot.docs
-    ) {
+    const snapshot = await getDocs(q);
 
-      const data =
-        paymentDoc.data();
-
-      if (
-        data.tenantId === tenantId &&
-        data.month === month &&
-        data.year === year
-      ) {
-
-        await deleteDoc(
-          doc(
-            db,
-            "payments",
-            paymentDoc.id
-          )
-        );
-
-      }
-
+    for (const paymentDoc of snapshot.docs) {
+      await deleteDoc(doc(db, "payments", paymentDoc.id));
     }
 
     return true;
-
   } catch (error) {
-
-    console.error(
-      "Delete payment error:",
-      error
-    );
-
+    console.error("Delete payment error:", error);
     return false;
-
   }
-
 };

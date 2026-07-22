@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// PG Manager — Firestore security rules.
+//
+// The app is client-only, so these rules ARE the backend trust boundary.
+// Every domain document carries an `ownerId`. An owner may only ever read
+// or write documents they own, and only while signed in.
+// See docs/data-model.md for the full contract.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // A document belongs to the caller.
+    function ownsExisting() {
+      return isSignedIn() && resource.data.ownerId == uid();
+    }
+
+    // A document being created is stamped with the caller's uid.
+    function ownsIncoming() {
+      return isSignedIn() && request.resource.data.ownerId == uid();
+    }
+
+    match /rooms/{roomId} {
+      allow read: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update, delete: if ownsExisting();
+    }
+
+    match /tenants/{tenantId} {
+      allow read: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update, delete: if ownsExisting();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update, delete: if ownsExisting();
+    }
+
+    // Everything else is denied by default.
+  }
+}
