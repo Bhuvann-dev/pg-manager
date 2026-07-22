@@ -14,8 +14,25 @@ import {
   getPayments,
   deletePayment
 } from "../../services/paymentService";
-import { Search, AlertTriangle } from "lucide-react";
+import { Search, AlertTriangle, History } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
+const formatPaidDate = (paidDate) => {
+  if (!paidDate) return "";
+  // Firestore Timestamp has toDate(); a JS Date does not.
+  const d =
+    typeof paidDate.toDate === "function"
+      ? paidDate.toDate()
+      : new Date(paidDate);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-IN");
+};
 
 export default function TenantsPage() {
 
@@ -25,6 +42,7 @@ export default function TenantsPage() {
   const [payments, setPayments] = useState([]);
 
   const [editingTenant, setEditingTenant] = useState(null);
+  const [ledgerTenant, setLedgerTenant] = useState(null);
 
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -139,6 +157,44 @@ export default function TenantsPage() {
       }
 
     };
+
+  /*
+  LEDGER — a tenant's payment history (newest first)
+  */
+
+  const tenantLedger = (tenantId) =>
+    payments
+      .filter((p) => p.tenantId === tenantId)
+      .sort(
+        (a, b) =>
+          (b.year - a.year) || (b.month - a.month)
+      );
+
+  const handleRemovePayment = async (payment) => {
+
+    const label =
+      `${MONTH_NAMES[payment.month - 1]} ${payment.year}`;
+
+    const confirmRemove =
+      window.confirm(
+        `Remove the payment for ${label}? This corrects a mistaken entry.`
+      );
+
+    if (!confirmRemove) return;
+
+    const success =
+      await deletePayment(
+        user.uid,
+        payment.tenantId,
+        payment.month,
+        payment.year
+      );
+
+    if (success) {
+      await loadData();
+    }
+
+  };
 
   /*
   TENANT LEFT
@@ -630,6 +686,18 @@ export default function TenantsPage() {
                           Edit
                         </button>
 
+                        <button
+                          onClick={() =>
+                            setLedgerTenant(
+                              tenant
+                            )
+                          }
+                          className="bg-slate-600 px-3 py-1 rounded flex items-center gap-1"
+                        >
+                          <History size={14} />
+                          History
+                        </button>
+
                         {!paid && (
 
                           <button
@@ -688,6 +756,85 @@ export default function TenantsPage() {
         </div>
 
       </div>
+
+      {/* LEDGER MODAL */}
+
+      {ledgerTenant && (
+
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center px-4">
+
+          <div className="bg-slate-900 p-6 rounded-xl w-full max-w-md">
+
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-xl font-bold">
+                Payment History
+              </h2>
+
+              <button
+                onClick={() => setLedgerTenant(null)}
+                className="text-gray-400 hover:text-white text-sm"
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="text-gray-400 text-sm mb-4">
+              {ledgerTenant.name} · Room {ledgerTenant.roomNumber}
+            </p>
+
+            {tenantLedger(ledgerTenant.id).length === 0 ? (
+
+              <p className="text-gray-400 text-center py-8">
+                No payments recorded yet.
+              </p>
+
+            ) : (
+
+              <div className="max-h-80 overflow-y-auto divide-y divide-slate-800">
+
+                {tenantLedger(ledgerTenant.id).map((p) => (
+
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between py-3"
+                  >
+
+                    <div>
+                      <div className="font-medium">
+                        {MONTH_NAMES[p.month - 1]} {p.year}
+                      </div>
+
+                      <div className="text-xs text-gray-400">
+                        Paid {formatPaidDate(p.paidDate)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-green-400 font-semibold">
+                        ₹{Math.max(Number(p.amount) || 0, 0)}
+                      </span>
+
+                      <button
+                        onClick={() => handleRemovePayment(p)}
+                        className="text-red-400 hover:text-red-300 text-xs"
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
 
       {/* EDIT MODAL */}
 
