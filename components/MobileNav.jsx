@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
+    DoorOpen,
     Users,
     UserPlus
 } from "lucide-react";
@@ -16,6 +17,11 @@ export default function MobileNav() {
             name: "Home",
             href: "/",
             icon: LayoutDashboard
+        },
+        {
+            name: "Rooms",
+            href: "/rooms",
+            icon: DoorOpen
         },
         {
             name: "Tenants",

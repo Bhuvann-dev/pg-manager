@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { getTenants } from "../services/tenantService";
 import { getPayments } from "../services/paymentService";
+import { getRooms, computeOccupancy } from "../services/roomService";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [tenants, setTenants] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [rooms, setRooms] = useState([]);
 
   useEffect(() => {
     if (!user) return;
@@ -18,12 +20,14 @@ export default function Dashboard() {
   const loadData = async (ownerId) => {
     const tenantData = await getTenants(ownerId);
     const paymentData = await getPayments(ownerId);
+    const roomData = await getRooms(ownerId);
 
     setTenants(
       tenantData.filter((t) => t.status !== "inactive")
     );
 
     setPayments(paymentData);
+    setRooms(roomData);
   };
 
   const today = new Date();
@@ -99,6 +103,25 @@ export default function Dashboard() {
 
     }).length;
 
+  /*
+  Occupancy
+  */
+
+  const totalBeds =
+    rooms.reduce(
+      (sum, r) => sum + (Number(r.capacity) || 0),
+      0
+    );
+
+  const occupiedBeds =
+    rooms.reduce(
+      (sum, r) => sum + computeOccupancy(r, tenants),
+      0
+    );
+
+  const vacantBeds =
+    Math.max(totalBeds - occupiedBeds, 0);
+
   const Card = ({ title, value }) => (
     <div className="bg-slate-900 p-6 rounded-xl shadow-md">
       <div className="text-gray-400 text-sm">
@@ -138,6 +161,29 @@ export default function Dashboard() {
         <Card
           title="Overdue"
           value={overdueCount}
+        />
+
+      </div>
+
+      <h2 className="text-lg font-semibold mt-8 mb-4">
+        Occupancy
+      </h2>
+
+      <div className="grid grid-cols-3 gap-4">
+
+        <Card
+          title="Total Beds"
+          value={totalBeds}
+        />
+
+        <Card
+          title="Occupied"
+          value={occupiedBeds}
+        />
+
+        <Card
+          title="Vacant"
+          value={vacantBeds}
         />
 
       </div>

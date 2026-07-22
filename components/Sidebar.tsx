@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Users,
   UserPlus,
+  DoorOpen,
   Menu,
   ChevronLeft,
   LogOut
@@ -26,6 +27,7 @@ export default function Sidebar() {
 
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Rooms", href: "/rooms", icon: DoorOpen },
     { name: "Tenants", href: "/tenants", icon: Users },
     { name: "Add Tenant", href: "/add-tenant", icon: UserPlus }
   ];

@@ -10,6 +10,10 @@ import {
   addTenant,
   getTenants
 } from "../../services/tenantService";
+import {
+  getRooms,
+  computeOccupancy
+} from "../../services/roomService";
 import { useAuth } from "../../contexts/AuthContext";
 import * as XLSX from "xlsx";
 
@@ -52,6 +56,9 @@ export default function AddTenantPage() {
   const [tenants, setTenants] =
     useState([]);
 
+  const [rooms, setRooms] =
+    useState([]);
+
   const [errors, setErrors] =
     useState({});
 
@@ -91,10 +98,14 @@ export default function AddTenantPage() {
     const load =
       async () => {
 
-        const data =
-          await getTenants(user.uid);
+        const [tenantData, roomData] =
+          await Promise.all([
+            getTenants(user.uid),
+            getRooms(user.uid)
+          ]);
 
-        setTenants(data);
+        setTenants(tenantData);
+        setRooms(roomData);
 
       };
 
@@ -153,30 +164,47 @@ export default function AddTenantPage() {
       }
 
       /*
-      Room number
+      Room — must be an existing room with a free bed
       */
 
       if (!room) {
 
         newErrors.room =
-          "Room required";
+          "Select a room";
 
-      }
+      } else {
 
-      /*
-      Max 4 members per room
-      */
+        const selectedRoom =
+          rooms.find(
+            (r) =>
+              String(r.roomNumber) === String(room)
+          );
 
-      const roomMembers =
-        tenants.filter(
-          (t) =>
-            t.roomNumber === room
-        ).length;
+        if (!selectedRoom) {
 
-      if (roomMembers >= 4) {
+          newErrors.room =
+            "Room not found — add it on the Rooms page first";
 
-        newErrors.room =
-          "Max 4 members allowed in a room";
+        } else {
+
+          const occupancy =
+            computeOccupancy(
+              selectedRoom,
+              tenants
+            );
+
+          if (
+            occupancy >=
+            (Number(selectedRoom.capacity) || 0)
+          ) {
+
+            newErrors.room =
+              `Room ${selectedRoom.roomNumber} is full ` +
+              `(${occupancy}/${selectedRoom.capacity} beds)`;
+
+          }
+
+        }
 
       }
 
@@ -567,32 +595,65 @@ export default function AddTenantPage() {
 
         <label className="mt-4 block">
 
-          Room Number
+          Room
 
         </label>
 
-        <input
-          ref={roomRef}
-          inputMode="numeric"
-          value={room}
-          onChange={(e) =>
-            setRoom(
-              e.target.value.replace(
-                /\D/g,
-                ""
+        {rooms.length === 0 ? (
+
+          <p className="text-yellow-400 text-sm mt-1">
+            No rooms yet — add rooms on the Rooms page first.
+          </p>
+
+        ) : (
+
+          <select
+            ref={roomRef}
+            value={room}
+            onChange={(e) =>
+              setRoom(e.target.value)
+            }
+            className={inputStyle}
+          >
+
+            <option value="">
+              Select a room
+            </option>
+
+            {rooms
+              .slice()
+              .sort((a, b) =>
+                String(a.roomNumber).localeCompare(
+                  String(b.roomNumber),
+                  undefined,
+                  { numeric: true }
+                )
               )
-            )
-          }
-          onKeyDown={(e) => {
+              .map((r) => {
 
-            if (
-              e.key === "Enter"
-            )
-              rentRef.current.focus();
+                const occupancy =
+                  computeOccupancy(r, tenants);
 
-          }}
-          className={inputStyle}
-        />
+                const full =
+                  occupancy >=
+                  (Number(r.capacity) || 0);
+
+                return (
+                  <option
+                    key={r.id}
+                    value={r.roomNumber}
+                    disabled={full}
+                  >
+                    Room {r.roomNumber} — {occupancy}/{r.capacity}
+                    {full ? " (full)" : ""}
+                  </option>
+                );
+
+              })}
+
+          </select>
+
+        )}
 
         {errors.room && (
 
