@@ -16,6 +16,7 @@ import {
   computeOccupancy
 } from "../../services/roomService";
 import { uploadDocument } from "../../services/storageService";
+import { isPhoneTaken } from "../../lib/tenant";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import * as XLSX from "xlsx";
@@ -159,19 +160,14 @@ export default function AddTenantPage() {
       }
 
       /*
-      Duplicate phone
+      Duplicate phone — only among ACTIVE tenants, so a tenant who left
+      can re-join with the same number.
       */
 
-      const duplicatePhone =
-        tenants.some(
-          (t) =>
-            t.phone === phone
-        );
-
-      if (duplicatePhone) {
+      if (isPhoneTaken(tenants, phone)) {
 
         newErrors.phone =
-          "Phone already exists";
+          "An active tenant already has this phone";
 
       }
 

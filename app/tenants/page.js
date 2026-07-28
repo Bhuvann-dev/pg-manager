@@ -34,6 +34,7 @@ import {
   monthsPaid
 } from "../../lib/rent";
 import { formatMoney } from "../../lib/format";
+import { isPhoneTaken } from "../../lib/tenant";
 
 const PHONE_RE = /^[6-9]\d{9}$/;
 const PAGE_SIZE = 12;
@@ -209,8 +210,8 @@ export default function TenantsPage() {
     if (!t.name || !t.name.trim()) return "Name is required.";
     if (!PHONE_RE.test(String(t.phone || "")))
       return "Enter a valid 10-digit phone number.";
-    if (tenants.some((x) => x.id !== t.id && x.phone === t.phone))
-      return "Another tenant already has that phone number.";
+    if (isPhoneTaken(tenants, t.phone, t.id))
+      return "Another active tenant already has that phone number.";
 
     const rent = parseInt(t.rentAmount, 10);
     if (!Number.isFinite(rent) || rent <= 0) return "Enter a valid rent amount.";
