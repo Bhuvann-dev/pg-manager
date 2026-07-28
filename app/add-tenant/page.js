@@ -81,6 +81,14 @@ export default function AddTenantPage() {
   const [aadhaarFile, setAadhaarFile] =
     useState(null);
 
+  // Tracks whether the saved draft has been restored, so we don't overwrite
+  // it with empty initial values before restoring.
+  const [restored, setRestored] =
+    useState(false);
+
+  const draftKey =
+    user ? `pg-add-tenant-draft:${user.uid}` : null;
+
   /*
   INPUT REFS (AUTO FOCUS)
   */
@@ -125,6 +133,79 @@ export default function AddTenantPage() {
     load();
 
   }, [user]);
+
+  /*
+  RESTORE DRAFT (survives navigation / refresh)
+  */
+
+  useEffect(() => {
+
+    if (!draftKey) return;
+
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.name != null) setName(d.name);
+        if (d.phone != null) setPhone(d.phone);
+        if (d.room != null) setRoom(d.room);
+        if (d.rent != null) setRent(d.rent);
+        if (d.dueDate != null) setDueDate(d.dueDate);
+        if (d.deposit != null) setDeposit(d.deposit);
+        if (d.joinDate) setJoinDate(d.joinDate);
+      }
+    } catch {
+      /* ignore malformed draft */
+    }
+
+    setRestored(true);
+
+  }, [draftKey]);
+
+  /*
+  SAVE DRAFT on change — cleared automatically once the form is empty
+  (e.g. after a successful add).
+  */
+
+  useEffect(() => {
+
+    if (!draftKey || !restored) return;
+
+    const isEmpty =
+      !name && !phone && !room && !rent && !dueDate && !deposit;
+
+    try {
+      if (isEmpty) {
+        localStorage.removeItem(draftKey);
+      } else {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            name,
+            phone,
+            room,
+            rent,
+            dueDate,
+            deposit,
+            joinDate
+          })
+        );
+      }
+    } catch {
+      /* storage unavailable — ignore */
+    }
+
+  }, [
+    draftKey,
+    restored,
+    name,
+    phone,
+    room,
+    rent,
+    dueDate,
+    deposit,
+    joinDate
+  ]);
 
   /*
   VALIDATION
