@@ -115,6 +115,30 @@ and deploy the security rules in [`firestore.rules`](firestore.rules) and
 [`storage.rules`](storage.rules). Details in
 [docs/data-model.md](docs/data-model.md).
 
+## Deploy (Vercel + Firebase, authenticated)
+
+The app runs in **authenticated mode by default** — each owner signs in and
+sees only their own data.
+
+1. **Firebase Console**
+   - **Authentication → Sign-in method:** enable **Email/Password** and **Google**.
+   - **Authentication → Settings → Authorized domains:** add your Vercel domain
+     (e.g. `pg-manager.vercel.app`).
+   - Deploy security rules with the Firebase CLI (config lives in `firebase.json`):
+     ```bash
+     npm i -g firebase-tools && firebase login
+     firebase deploy --only firestore:rules,storage:rules
+     ```
+     _(Storage rules need the Blaze plan; if Storage isn't enabled, deploy just
+     `firestore:rules`.)_
+2. **Vercel**
+   - Import the GitHub repo (auto-detects Next.js).
+   - Add the six `NEXT_PUBLIC_FIREBASE_*` env vars from your `.env.local`.
+   - Deploy → you get a live `https://<project>.vercel.app` link. Every push
+     auto-redeploys.
+
+To run a **no-login local sandbox** instead, set `NEXT_PUBLIC_AUTH_ENABLED=false`.
+
 ## Roadmap
 
 - [x] Rent-manager MVP: dashboard, tenants, mark-paid, WhatsApp reminders
