@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { AUTH_ENABLED } from "../lib/config";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -108,24 +109,31 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Owner + logout (only when auth is enabled) */}
-      {AUTH_ENABLED && (
-        <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
-          {!collapsed && user && (
-            <div className="px-2 pb-2 text-xs truncate" style={{ color: "var(--text-faint)" }}>
-              {user.email}
-            </div>
-          )}
+      {/* Footer: theme toggle (always) + owner/logout (when auth on) */}
+      <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
+        <ThemeToggle showLabel={!collapsed} className={collapsed ? "px-0" : ""} />
 
-          <button
-            onClick={handleLogout}
-            className={`btn btn-ghost w-full ${collapsed ? "px-0" : "justify-start"}`}
-          >
-            <LogOut size={18} />
-            {!collapsed && "Sign out"}
-          </button>
-        </div>
-      )}
+        {AUTH_ENABLED && (
+          <>
+            {!collapsed && user && (
+              <div
+                className="px-2 pt-2 text-xs truncate"
+                style={{ color: "var(--text-faint)" }}
+              >
+                {user.email}
+              </div>
+            )}
+
+            <button
+              onClick={handleLogout}
+              className={`btn btn-ghost w-full ${collapsed ? "px-0" : "justify-start"}`}
+            >
+              <LogOut size={18} />
+              {!collapsed && "Sign out"}
+            </button>
+          </>
+        )}
+      </div>
     </aside>
   );
 }

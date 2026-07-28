@@ -495,7 +495,7 @@ export default function AddTenantPage() {
     "input";
 
   const errorStyle =
-    "text-[#972f20] text-sm mt-1";
+    "t-danger text-sm mt-1";
 
   return (
 
@@ -606,7 +606,7 @@ export default function AddTenantPage() {
 
         {rooms.length === 0 ? (
 
-          <p className="text-[#7a5604] text-sm mt-1">
+          <p className="t-pending text-sm mt-1">
             No rooms yet — add rooms on the Rooms page first.
           </p>
 
@@ -820,7 +820,7 @@ export default function AddTenantPage() {
 
         {aadhaarFile && (
 
-          <p className="text-[#0f6b39] text-sm mt-1">
+          <p className="t-success text-sm mt-1">
             Selected: {aadhaarFile.name}
           </p>
 
@@ -828,7 +828,7 @@ export default function AddTenantPage() {
 
         {errors.aadhaarFile && (
 
-          <p className="text-[#972f20] text-sm mt-1">
+          <p className="t-danger text-sm mt-1">
             {errors.aadhaarFile}
           </p>
 

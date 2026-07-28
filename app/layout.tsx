@@ -32,6 +32,13 @@ export default function RootLayout({
     >
       <body>
 
+        {/* Apply the saved (or system) theme before paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('pg-theme');if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`
+          }}
+        />
+
         <AuthProvider>
 
           <AppShell>

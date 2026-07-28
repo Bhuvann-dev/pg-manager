@@ -35,15 +35,59 @@ identity, and tabular monospace numerals for money. No gradients.
   /* Semantic */
   --success: #1f9d55;
   --success-soft: #dff2e6;
+  --success-text: #0f6b39;
   --warning: #c47d0a;
   --warning-soft: #f6ecd6;
+  --warning-text: #8a5a06;
   --danger: #c8412f;
   --danger-soft: #f6e0dc;
+  --danger-text: #972f20;
   --pending: #b07d05;
   --pending-soft: #f4ecd4;
+  --pending-text: #7a5604;
 
   --radius: 14px;
   --shadow: 0 1px 0 var(--border), 0 2px 8px -6px rgba(38, 35, 28, 0.25);
+  --grid-line: var(--border);
+}
+
+/* ---------- Night mode: warm-dark Ledger ---------- */
+:root[data-theme="dark"] {
+  --bg: #14130d;
+  --bg-2: #100f0a;
+  --surface: #1e1c14;
+  --surface-2: #26231a;
+  --surface-3: #322e21;
+
+  --border: #3a3526;
+  --border-strong: #4b4634;
+  --ink: #ece7d8;
+
+  --text: #ece7d8;
+  --text-muted: #a79e88;
+  --text-faint: #7a725d;
+
+  --accent: #18b6a5;
+  --accent-hover: #22c8b6;
+  --accent-soft: #123c37;
+  --accent-ink: #74e2d5;
+
+  --success: #34c26e;
+  --success-soft: #14301f;
+  --success-text: #56d68a;
+  --warning: #d9a441;
+  --warning-soft: #322614;
+  --warning-text: #e6bb63;
+  --danger: #e26b5c;
+  --danger-soft: #331b17;
+  --danger-text: #f08d81;
+  --pending: #d3a63c;
+  --pending-soft: #2f2712;
+  --pending-text: #e2bb54;
+
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 6px 18px -10px rgba(0, 0, 0, 0.7);
+  --grid-line: rgba(255, 255, 255, 0.03);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -64,11 +108,12 @@ body {
   /* Flat warm paper with a faint grid — deliberately not a gradient. */
   background-color: var(--bg);
   background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 26px 26px;
   background-position: -1px -1px;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 ::selection {
@@ -110,6 +155,18 @@ body {
   text-transform: uppercase;
   color: var(--text-faint);
 }
+
+/* Theme-aware semantic text colors. */
+.t-success { color: var(--success-text); }
+.t-danger { color: var(--danger-text); }
+.t-warning { color: var(--warning-text); }
+.t-pending { color: var(--pending-text); }
+.t-accent { color: var(--accent); }
+.t-muted { color: var(--text-muted); }
+
+/* Overdue table row tint (adapts to theme). */
+.row-overdue { background: var(--danger-soft); }
+.row-overdue:hover { background: color-mix(in srgb, var(--danger-soft) 70%, var(--danger)); }
 
 @layer components {
   .card {
@@ -246,24 +303,24 @@ body {
     border: 1px solid transparent;
   }
   .badge-success {
-    color: #0f6b39;
+    color: var(--success-text);
     background: var(--success-soft);
-    border-color: #b7e0c6;
+    border-color: color-mix(in srgb, var(--success) 35%, transparent);
   }
   .badge-warning {
-    color: #8a5a06;
+    color: var(--warning-text);
     background: var(--warning-soft);
-    border-color: #e6d3a6;
+    border-color: color-mix(in srgb, var(--warning) 35%, transparent);
   }
   .badge-danger {
-    color: #972f20;
+    color: var(--danger-text);
     background: var(--danger-soft);
-    border-color: #e6bdb4;
+    border-color: color-mix(in srgb, var(--danger) 35%, transparent);
   }
   .badge-pending {
-    color: #7a5604;
+    color: var(--pending-text);
     background: var(--pending-soft);
-    border-color: #e6d6a3;
+    border-color: color-mix(in srgb, var(--pending) 35%, transparent);
   }
   .badge-neutral {
     color: var(--text-muted);

@@ -224,7 +224,7 @@ export default function RoomsPage() {
       {loading ? (
         <Loading label="Loading rooms…" />
       ) : rooms.length === 0 ? (
-        <div className="text-[color:var(--text-muted)] text-center py-10">
+        <div className="t-muted text-center py-10">
           No rooms yet. Add your first room above.
         </div>
       ) : (
@@ -253,7 +253,7 @@ export default function RoomsPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <DoorOpen size={20} className="text-[color:var(--accent)]" />
+                      <DoorOpen size={20} className="t-accent" />
                       <span className="text-lg font-semibold">
                         Room {room.roomNumber}
                       </span>
@@ -262,7 +262,7 @@ export default function RoomsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingRoom(room)}
-                        className="text-[color:var(--text-muted)] hover:text-[color:var(--text)]"
+                        className="t-muted hover:text-[color:var(--text)]"
                         aria-label="Edit room"
                       >
                         <Pencil size={16} />
@@ -270,7 +270,7 @@ export default function RoomsPage() {
 
                       <button
                         onClick={() => handleDelete(room)}
-                        className="text-[color:var(--text-muted)] hover:text-[#972f20]"
+                        className="t-muted hover:t-danger"
                         aria-label="Delete room"
                       >
                         <Trash2 size={16} />
@@ -282,21 +282,21 @@ export default function RoomsPage() {
                     <span className="text-3xl font-bold">
                       {occupancy}
                     </span>
-                    <span className="text-[color:var(--text-muted)]">
+                    <span className="t-muted">
                       / {room.capacity} beds
                     </span>
                   </div>
 
                   <div
                     className={`mt-1 text-sm font-medium ${
-                      full ? "text-[#972f20]" : "text-[#0f6b39]"
+                      full ? "t-danger" : "t-success"
                     }`}
                   >
                     {full ? "Full" : `${vacancy} bed(s) free`}
                   </div>
 
                   {room.notes && (
-                    <p className="mt-3 text-sm text-[color:var(--text-muted)]">
+                    <p className="mt-3 text-sm t-muted">
                       {room.notes}
                     </p>
                   )}
@@ -314,7 +314,7 @@ export default function RoomsPage() {
               Edit Room {editingRoom.roomNumber}
             </h2>
 
-            <label className="text-sm text-[color:var(--text-muted)]">Room Number</label>
+            <label className="text-sm t-muted">Room Number</label>
             <input
               className="input mb-3 mt-1"
               value={editingRoom.roomNumber}
@@ -326,7 +326,7 @@ export default function RoomsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">Beds (capacity)</label>
+            <label className="text-sm t-muted">Beds (capacity)</label>
             <input
               type="number"
               min={1}
@@ -340,7 +340,7 @@ export default function RoomsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">Notes</label>
+            <label className="text-sm t-muted">Notes</label>
             <input
               className="input mb-5 mt-1"
               value={editingRoom.notes || ""}
@@ -377,7 +377,7 @@ export default function RoomsPage() {
 function SummaryCard({ title, value }) {
   return (
     <div className="card p-5 rounded-xl shadow-md">
-      <div className="text-[color:var(--text-muted)] text-sm">{title}</div>
+      <div className="t-muted text-sm">{title}</div>
       <div className="text-3xl font-bold mt-2">{value}</div>
     </div>
   );

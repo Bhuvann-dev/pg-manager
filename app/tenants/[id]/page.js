@@ -293,7 +293,7 @@ export default function TenantDetailPage() {
     <div className="max-w-3xl">
       <Link
         href="/tenants"
-        className="inline-flex items-center gap-1 text-[color:var(--text-muted)] hover:text-[color:var(--text)] text-sm mb-4"
+        className="inline-flex items-center gap-1 t-muted hover:text-[color:var(--text)] text-sm mb-4"
       >
         <ArrowLeft size={16} /> Back to Tenants
       </Link>
@@ -302,7 +302,7 @@ export default function TenantDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">{tenant.name}</h1>
-          <p className="text-[color:var(--text-muted)] text-sm">
+          <p className="t-muted text-sm">
             Room {tenant.roomNumber} · due day {tenant.dueDate}
           </p>
         </div>
@@ -333,11 +333,11 @@ export default function TenantDetailPage() {
 
         <div className="grid grid-cols-3 gap-4 text-center">
           <Metric label="Rent" value={`₹${s.rent}`} />
-          <Metric label="Paid" value={`₹${s.paid}`} accent="text-[#0f6b39]" />
+          <Metric label="Paid" value={`₹${s.paid}`} accent="t-success" />
           <Metric
             label="Balance"
             value={`₹${s.balance}`}
-            accent={s.balance > 0 ? "text-[#972f20]" : "text-[#0f6b39]"}
+            accent={s.balance > 0 ? "t-danger" : "t-success"}
           />
         </div>
       </div>
@@ -372,12 +372,12 @@ export default function TenantDetailPage() {
           <Metric
             label="Collected"
             value={`₹${depositCollected}`}
-            accent="text-[#0f6b39]"
+            accent="t-success"
           />
           <Metric
             label="Balance"
             value={`₹${depositBalance}`}
-            accent={depositBalance > 0 ? "text-[#8a5a06]" : "text-[#0f6b39]"}
+            accent={depositBalance > 0 ? "t-warning" : "t-success"}
           />
         </div>
       </div>
@@ -445,7 +445,7 @@ export default function TenantDetailPage() {
         <h2 className="font-semibold mb-4">Payment History</h2>
 
         {ledger.length === 0 ? (
-          <p className="text-[color:var(--text-muted)] text-sm py-4">
+          <p className="t-muted text-sm py-4">
             No payments recorded yet.
           </p>
         ) : (
@@ -464,7 +464,7 @@ export default function TenantDetailPage() {
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-[color:var(--text-muted)]">
+                  <div className="text-xs t-muted">
                     Paid {formatPaidDate(p.paidDate)}
                   </div>
                 </div>
@@ -473,8 +473,8 @@ export default function TenantDetailPage() {
                   <span
                     className={`font-semibold ${
                       (Number(p.amount) || 0) < 0
-                        ? "text-[#8a5a06]"
-                        : "text-[#0f6b39]"
+                        ? "t-warning"
+                        : "t-success"
                     }`}
                   >
                     {(Number(p.amount) || 0) < 0
@@ -483,7 +483,7 @@ export default function TenantDetailPage() {
                   </span>
                   <button
                     onClick={() => handleRemovePayment(p)}
-                    className="text-[#972f20] hover:text-red-300 text-xs"
+                    className="t-danger hover:text-red-300 text-xs"
                   >
                     Remove
                   </button>
@@ -499,16 +499,16 @@ export default function TenantDetailPage() {
         <div className="modal-backdrop">
           <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Record Payment</h2>
-            <p className="text-[color:var(--text-muted)] text-sm mb-4">
+            <p className="t-muted text-sm mb-4">
               {tenant.name} · {MONTH_NAMES[today.getMonth()]}{" "}
               {today.getFullYear()}
             </p>
 
-            <p className="text-sm text-[color:var(--text-muted)] mb-2">
+            <p className="text-sm t-muted mb-2">
               Rent ₹{s.rent} · Paid ₹{s.paid} · Balance ₹{s.balance}
             </p>
 
-            <label className="text-sm text-[color:var(--text-muted)]">Amount (₹)</label>
+            <label className="text-sm t-muted">Amount (₹)</label>
             <input
               type="number"
               min={1}
@@ -541,17 +541,17 @@ export default function TenantDetailPage() {
         <div className="modal-backdrop">
           <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Move Room</h2>
-            <p className="text-[color:var(--text-muted)] text-sm mb-4">
+            <p className="t-muted text-sm mb-4">
               {tenant.name} · currently Room {tenant.roomNumber}
             </p>
 
             {rooms.length === 0 ? (
-              <p className="text-[#7a5604] text-sm mb-4">
+              <p className="t-pending text-sm mb-4">
                 No rooms defined yet.
               </p>
             ) : (
               <>
-                <label className="text-sm text-[color:var(--text-muted)]">New room</label>
+                <label className="text-sm t-muted">New room</label>
                 <select
                   value={moveRoom}
                   onChange={(e) => setMoveRoom(e.target.value)}
@@ -612,14 +612,14 @@ export default function TenantDetailPage() {
         <div className="modal-backdrop">
           <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Record Deposit</h2>
-            <p className="text-[color:var(--text-muted)] text-sm mb-4">{tenant.name}</p>
+            <p className="t-muted text-sm mb-4">{tenant.name}</p>
 
-            <p className="text-sm text-[color:var(--text-muted)] mb-2">
+            <p className="text-sm t-muted mb-2">
               Expected ₹{depositExpected} · Collected ₹{depositCollected} ·
               Balance ₹{depositBalance}
             </p>
 
-            <label className="text-sm text-[color:var(--text-muted)]">Amount (₹)</label>
+            <label className="text-sm t-muted">Amount (₹)</label>
             <input
               type="number"
               min={1}
@@ -654,7 +654,7 @@ function Metric({ label, value, accent }) {
   return (
     <div>
       <div className={`text-2xl font-bold ${accent || ""}`}>{value}</div>
-      <div className="text-[color:var(--text-muted)] text-xs mt-1">{label}</div>
+      <div className="t-muted text-xs mt-1">{label}</div>
     </div>
   );
 }
@@ -662,7 +662,7 @@ function Metric({ label, value, accent }) {
 function Row({ label, value }) {
   return (
     <div className="flex justify-between py-2 border-b border-[color:var(--border)] last:border-0">
-      <span className="text-[color:var(--text-muted)] text-sm">{label}</span>
+      <span className="t-muted text-sm">{label}</span>
       <span className="text-sm">{value}</span>
     </div>
   );

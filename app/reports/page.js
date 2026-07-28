@@ -121,7 +121,7 @@ export default function ReportsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Rent Report</h1>
-          <p className="text-[color:var(--text-muted)] text-sm print-only">{periodLabel}</p>
+          <p className="t-muted text-sm print-only">{periodLabel}</p>
         </div>
 
         <div className="flex flex-wrap gap-2 no-print">
@@ -180,12 +180,12 @@ export default function ReportsPage() {
             <Summary
               title="Collected"
               value={`₹${totals.collected}`}
-              accent="text-[#0f6b39]"
+              accent="t-success"
             />
             <Summary
               title="Outstanding"
               value={`₹${totals.outstanding}`}
-              accent={totals.outstanding > 0 ? "text-[#972f20]" : undefined}
+              accent={totals.outstanding > 0 ? "t-danger" : undefined}
             />
             <Summary title="Collection Rate" value={`${totals.rate}%`} />
           </div>
@@ -214,10 +214,10 @@ export default function ReportsPage() {
                     <td
                       className={`p-3 font-medium ${
                         r.status === "Paid"
-                          ? "text-[#0f6b39]"
+                          ? "t-success"
                           : r.status === "Partial"
-                          ? "text-[#8a5a06]"
-                          : "text-[#972f20]"
+                          ? "t-warning"
+                          : "t-danger"
                       }`}
                     >
                       {r.status}
@@ -247,7 +247,7 @@ export default function ReportsPage() {
 function Summary({ title, value, accent }) {
   return (
     <div className="card p-5 rounded-xl">
-      <div className="text-[color:var(--text-muted)] text-sm">{title}</div>
+      <div className="t-muted text-sm">{title}</div>
       <div className={`text-2xl font-bold mt-1 ${accent || ""}`}>{value}</div>
     </div>
   );

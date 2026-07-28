@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { AUTH_ENABLED } from "../lib/config";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
+import ThemeToggle from "./ThemeToggle";
 
 /*
 AppShell — client-side route protection + layout.
@@ -49,6 +50,13 @@ export default function AppShell({ children }) {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
+
+      {/* Floating theme toggle for mobile (sidebar hosts it on desktop) */}
+      <div className="md:hidden fixed top-3 right-3 z-40">
+        <div className="card p-0.5">
+          <ThemeToggle />
+        </div>
+      </div>
 
       <main className="flex-1 min-w-0 px-4 py-6 md:px-10 md:py-8 pb-24 md:pb-8">
         <div className="mx-auto w-full max-w-6xl">{children}</div>

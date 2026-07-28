@@ -31,10 +31,10 @@ import { Search, AlertTriangle, History, Users } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const STATUS_STYLES = {
-  paid: "text-[#0f6b39]",
-  partial: "text-[#8a5a06]",
-  overdue: "text-[#972f20]",
-  pending: "text-[#7a5604]"
+  paid: "t-success",
+  partial: "t-warning",
+  overdue: "t-danger",
+  pending: "t-pending"
 };
 
 export default function TenantsPage() {
@@ -274,7 +274,7 @@ export default function TenantsPage() {
             <div className="relative w-full md:w-72">
               <Search
                 size={18}
-                className="absolute left-3 top-3 text-[color:var(--text-muted)]"
+                className="absolute left-3 top-3 t-muted"
               />
 
               <input
@@ -288,7 +288,7 @@ export default function TenantsPage() {
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="text-[color:var(--text-muted)]">Filter by Due Date:</span>
+              <span className="t-muted">Filter by Due Date:</span>
 
               <input
                 type="number"
@@ -365,14 +365,14 @@ export default function TenantsPage() {
                       key={tenant.id}
                       className={`border-b border-[color:var(--border)] transition ${
                         s.status === "overdue"
-                          ? "bg-[#f7e4e0] hover:bg-[#f2d5cf]"
+                          ? "row-overdue"
                           : "hover:bg-[color:var(--surface-2)]"
                       }`}
                     >
                       <td className="p-3">
                         <Link
                           href={`/tenants/${tenant.id}`}
-                          className="text-[color:var(--accent)] hover:underline font-medium"
+                          className="t-accent hover:underline font-medium"
                         >
                           {tenant.name}
                         </Link>
@@ -411,7 +411,7 @@ export default function TenantsPage() {
                                 tenant.aadhaarPath || tenant.aadhaarFile
                               )
                             }
-                            className="text-[color:var(--accent)] underline"
+                            className="t-accent underline"
                           >
                             View
                           </button>
@@ -475,7 +475,7 @@ export default function TenantsPage() {
         <div className="modal-backdrop">
           <div className="card p-6 rounded-xl w-full max-w-sm">
             <h2 className="text-xl font-bold mb-1">Record Payment</h2>
-            <p className="text-[color:var(--text-muted)] text-sm mb-4">
+            <p className="t-muted text-sm mb-4">
               {payingTenant.name} ·{" "}
               {MONTH_NAMES[today.getMonth()]} {today.getFullYear()}
             </p>
@@ -483,13 +483,13 @@ export default function TenantsPage() {
             {(() => {
               const s = rentStatus(payingTenant, payments, today);
               return (
-                <p className="text-sm text-[color:var(--text-muted)] mb-2">
+                <p className="text-sm t-muted mb-2">
                   Rent ₹{s.rent} · Paid ₹{s.paid} · Balance ₹{s.balance}
                 </p>
               );
             })()}
 
-            <label className="text-sm text-[color:var(--text-muted)]">Amount (₹)</label>
+            <label className="text-sm t-muted">Amount (₹)</label>
             <input
               type="number"
               min={1}
@@ -527,18 +527,18 @@ export default function TenantsPage() {
 
               <button
                 onClick={() => setLedgerTenant(null)}
-                className="text-[color:var(--text-muted)] hover:text-[color:var(--text)] text-sm"
+                className="t-muted hover:text-[color:var(--text)] text-sm"
               >
                 Close
               </button>
             </div>
 
-            <p className="text-[color:var(--text-muted)] text-sm mb-4">
+            <p className="t-muted text-sm mb-4">
               {ledgerTenant.name} · Room {ledgerTenant.roomNumber}
             </p>
 
             {tenantLedger(ledgerTenant.id).length === 0 ? (
-              <p className="text-[color:var(--text-muted)] text-center py-8">
+              <p className="t-muted text-center py-8">
                 No payments recorded yet.
               </p>
             ) : (
@@ -558,19 +558,19 @@ export default function TenantsPage() {
                         )}
                       </div>
 
-                      <div className="text-xs text-[color:var(--text-muted)]">
+                      <div className="text-xs t-muted">
                         Paid {formatPaidDate(p.paidDate)}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className="text-[#0f6b39] font-semibold">
+                      <span className="t-success font-semibold">
                         ₹{Math.max(Number(p.amount) || 0, 0)}
                       </span>
 
                       <button
                         onClick={() => handleRemovePayment(p)}
-                        className="text-[#972f20] hover:text-red-300 text-xs"
+                        className="t-danger hover:text-red-300 text-xs"
                       >
                         Remove
                       </button>
@@ -589,7 +589,7 @@ export default function TenantsPage() {
           <div className="card p-6 rounded-xl w-full max-w-md">
             <h2 className="text-xl font-bold mb-5">Edit Tenant</h2>
 
-            <label className="text-sm text-[color:var(--text-muted)]">Name</label>
+            <label className="text-sm t-muted">Name</label>
             <input
               className="input mb-3 mt-1"
               value={editingTenant.name}
@@ -598,7 +598,7 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">Phone</label>
+            <label className="text-sm t-muted">Phone</label>
             <input
               className="input mb-3 mt-1"
               value={editingTenant.phone}
@@ -607,7 +607,7 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">Room Number</label>
+            <label className="text-sm t-muted">Room Number</label>
             <input
               className="input mb-3 mt-1"
               value={editingTenant.roomNumber}
@@ -619,7 +619,7 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">Monthly Rent (₹)</label>
+            <label className="text-sm t-muted">Monthly Rent (₹)</label>
             <input
               type="number"
               className="input mb-3 mt-1"
@@ -632,7 +632,7 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">Due Date (1–31)</label>
+            <label className="text-sm t-muted">Due Date (1–31)</label>
             <input
               type="number"
               className="input mb-3 mt-1"
@@ -645,7 +645,7 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">
+            <label className="text-sm t-muted">
               Security Deposit (₹)
             </label>
             <input
@@ -660,7 +660,7 @@ export default function TenantsPage() {
               }
             />
 
-            <label className="text-sm text-[color:var(--text-muted)]">Aadhaar Document</label>
+            <label className="text-sm t-muted">Aadhaar Document</label>
             <div className="mb-3 mt-1">
               {editingTenant.aadhaarPath || editingTenant.aadhaarFile ? (
                 <button
@@ -669,16 +669,16 @@ export default function TenantsPage() {
                       editingTenant.aadhaarPath || editingTenant.aadhaarFile
                     )
                   }
-                  className="text-[color:var(--accent)] underline"
+                  className="t-accent underline"
                 >
                   View Current Document
                 </button>
               ) : (
-                <span className="text-[color:var(--text-muted)]">No document uploaded</span>
+                <span className="t-muted">No document uploaded</span>
               )}
             </div>
 
-            <label className="text-sm text-[color:var(--text-muted)]">
+            <label className="text-sm t-muted">
               Replace Aadhaar (optional)
             </label>
             <input
