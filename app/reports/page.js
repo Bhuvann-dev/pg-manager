@@ -5,7 +5,8 @@ import { FileSpreadsheet, Printer } from "lucide-react";
 import * as XLSX from "xlsx";
 import { getTenants } from "../../services/tenantService";
 import { getPayments } from "../../services/paymentService";
-import { rentPaidForMonth, MONTH_NAMES } from "../../lib/rent";
+import { rentPaidForMonth, rentForMonth, MONTH_NAMES } from "../../lib/rent";
+import { formatMoney } from "../../lib/format";
 import { Loading, EmptyState } from "../../components/States";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -44,7 +45,7 @@ export default function ReportsPage() {
         })
       )
       .map((t) => {
-        const rent = Number(t.rentAmount) || 0;
+        const rent = rentForMonth(t, year, month);
         const paid = rentPaidForMonth(payments, t.id, month, year);
         const balance = Math.max(rent - paid, 0);
         const status =
@@ -176,15 +177,15 @@ export default function ReportsPage() {
         <>
           {/* Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Summary title="Expected" value={`₹${totals.expected}`} />
+            <Summary title="Expected" value={formatMoney(totals.expected)} />
             <Summary
               title="Collected"
-              value={`₹${totals.collected}`}
+              value={formatMoney(totals.collected)}
               accent="t-success"
             />
             <Summary
               title="Outstanding"
-              value={`₹${totals.outstanding}`}
+              value={formatMoney(totals.outstanding)}
               accent={totals.outstanding > 0 ? "t-danger" : undefined}
             />
             <Summary title="Collection Rate" value={`${totals.rate}%`} />
@@ -208,9 +209,9 @@ export default function ReportsPage() {
                   <tr key={i} className="border-b border-[color:var(--border)]">
                     <td className="p-3">{r.name}</td>
                     <td className="p-3">{r.room}</td>
-                    <td className="p-3 text-right">₹{r.rent}</td>
-                    <td className="p-3 text-right">₹{r.paid}</td>
-                    <td className="p-3 text-right">₹{r.balance}</td>
+                    <td className="p-3 text-right num">{formatMoney(r.rent)}</td>
+                    <td className="p-3 text-right num">{formatMoney(r.paid)}</td>
+                    <td className="p-3 text-right num">{formatMoney(r.balance)}</td>
                     <td
                       className={`p-3 font-medium ${
                         r.status === "Paid"
@@ -230,10 +231,10 @@ export default function ReportsPage() {
                   <td className="p-3" colSpan={2}>
                     Total ({rows.length})
                   </td>
-                  <td className="p-3 text-right">₹{totals.expected}</td>
-                  <td className="p-3 text-right">₹{totals.collected}</td>
-                  <td className="p-3 text-right">₹{totals.outstanding}</td>
-                  <td className="p-3">{totals.rate}%</td>
+                  <td className="p-3 text-right num">{formatMoney(totals.expected)}</td>
+                  <td className="p-3 text-right num">{formatMoney(totals.collected)}</td>
+                  <td className="p-3 text-right num">{formatMoney(totals.outstanding)}</td>
+                  <td className="p-3 num">{totals.rate}%</td>
                 </tr>
               </tfoot>
             </table>
@@ -248,7 +249,7 @@ function Summary({ title, value, accent }) {
   return (
     <div className="card p-5 rounded-xl">
       <div className="t-muted text-sm">{title}</div>
-      <div className={`text-2xl font-bold mt-1 ${accent || ""}`}>{value}</div>
+      <div className={`text-2xl font-bold mt-1 num ${accent || ""}`}>{value}</div>
     </div>
   );
 }

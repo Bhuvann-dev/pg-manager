@@ -30,6 +30,7 @@ import {
   tenureDays,
   monthsPaid
 } from "../../lib/rent";
+import { formatMoney } from "../../lib/format";
 import { Loading, EmptyState, SkeletonRows } from "../../components/States";
 import { Search, AlertTriangle, History, Users, Archive } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -159,7 +160,7 @@ export default function TenantsPage() {
 
     if (
       !window.confirm(
-        `Remove the ₹${payment.amount} entry for ${label}? This corrects a mistaken entry.`
+        `Remove the ${formatMoney(payment.amount)} entry for ${label}? This corrects a mistaken entry.`
       )
     ) {
       return;
@@ -279,7 +280,7 @@ export default function TenantsPage() {
 
   const statusLabel = (s) => {
     if (s.status === "paid") return "Paid";
-    if (s.status === "partial") return `Partial ₹${s.paid}/₹${s.rent}`;
+    if (s.status === "partial") return `Partial ${formatMoney(s.paid)} / ${formatMoney(s.rent)}`;
     if (s.status === "overdue") return "Overdue";
     return "Pending";
   };
@@ -478,7 +479,7 @@ export default function TenantsPage() {
                       <td className="p-3">{tenant.roomNumber}</td>
 
                       <td className="p-3">
-                        ₹{Math.max(tenant.rentAmount, 0)}
+                        {formatMoney(Math.max(tenant.rentAmount, 0))}
                       </td>
 
                       <td className="p-3">
@@ -581,7 +582,7 @@ export default function TenantsPage() {
               const s = rentStatus(payingTenant, payments, today);
               return (
                 <p className="text-sm t-muted mb-2">
-                  Rent ₹{s.rent} · Paid ₹{s.paid} · Balance ₹{s.balance}
+                  Rent {formatMoney(s.rent)} · Paid {formatMoney(s.paid)} · Balance {formatMoney(s.balance)}
                 </p>
               );
             })()}
@@ -662,7 +663,7 @@ export default function TenantsPage() {
 
                     <div className="flex items-center gap-3">
                       <span className="t-success font-semibold">
-                        ₹{Math.max(Number(p.amount) || 0, 0)}
+                        {formatMoney(Number(p.amount) || 0)}
                       </span>
 
                       <button

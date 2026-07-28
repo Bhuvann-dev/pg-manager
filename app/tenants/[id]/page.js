@@ -40,6 +40,7 @@ import {
   tenureDays,
   monthsPaid
 } from "../../../lib/rent";
+import { formatMoney } from "../../../lib/format";
 import { Loading, EmptyState } from "../../../components/States";
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -210,7 +211,7 @@ export default function TenantDetailPage() {
 
     if (
       !window.confirm(
-        `Refund the full deposit of ₹${collected}? This records a refund entry.`
+        `Refund the full deposit of ${formatMoney(collected)}? This records a refund entry.`
       )
     ) {
       return;
@@ -236,7 +237,7 @@ export default function TenantDetailPage() {
   const handleRemovePayment = async (p) => {
     const label = `${MONTH_NAMES[p.month - 1]} ${p.year}`;
     if (
-      !window.confirm(`Remove the ₹${p.amount} entry for ${label}?`)
+      !window.confirm(`Remove the ${formatMoney(p.amount)} entry for ${label}?`)
     ) {
       return;
     }
@@ -318,7 +319,7 @@ export default function TenantDetailPage() {
         ) : (
           <span className={STATUS_STYLES[s.status]}>
             {STATUS_LABEL[s.status]}
-            {s.status === "partial" && ` ₹${s.paid}/₹${s.rent}`}
+            {s.status === "partial" && ` ${formatMoney(s.paid)}/${formatMoney(s.rent)}`}
           </span>
         )}
       </div>
@@ -365,11 +366,11 @@ export default function TenantDetailPage() {
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center">
-          <Metric label="Rent" value={`₹${s.rent}`} />
-          <Metric label="Paid" value={`₹${s.paid}`} accent="t-success" />
+          <Metric label="Rent" value={formatMoney(s.rent)} />
+          <Metric label="Paid" value={formatMoney(s.paid)} accent="t-success" />
           <Metric
             label="Balance"
-            value={`₹${s.balance}`}
+            value={formatMoney(s.balance)}
             accent={s.balance > 0 ? "t-danger" : "t-success"}
           />
         </div>
@@ -401,15 +402,15 @@ export default function TenantDetailPage() {
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center">
-          <Metric label="Expected" value={`₹${depositExpected}`} />
+          <Metric label="Expected" value={formatMoney(depositExpected)} />
           <Metric
             label="Collected"
-            value={`₹${depositCollected}`}
+            value={formatMoney(depositCollected)}
             accent="t-success"
           />
           <Metric
             label="Balance"
-            value={`₹${depositBalance}`}
+            value={formatMoney(depositBalance)}
             accent={depositBalance > 0 ? "t-warning" : "t-success"}
           />
         </div>
@@ -422,7 +423,7 @@ export default function TenantDetailPage() {
 
           <Row label="Phone" value={tenant.phone} />
           <Row label="Room" value={tenant.roomNumber} />
-          <Row label="Monthly rent" value={`₹${tenant.rentAmount}`} />
+          <Row label="Monthly rent" value={formatMoney(tenant.rentAmount)} />
           <Row label="Due day" value={tenant.dueDate} />
         </div>
 
@@ -513,8 +514,8 @@ export default function TenantDetailPage() {
                     }`}
                   >
                     {(Number(p.amount) || 0) < 0
-                      ? `-₹${Math.abs(Number(p.amount))}`
-                      : `₹${Number(p.amount) || 0}`}
+                      ? formatMoney(Number(p.amount))
+                      : formatMoney(Number(p.amount) || 0)}
                   </span>
                   <button
                     onClick={() => handleRemovePayment(p)}
@@ -540,7 +541,7 @@ export default function TenantDetailPage() {
             </p>
 
             <p className="text-sm t-muted mb-2">
-              Rent ₹{s.rent} · Paid ₹{s.paid} · Balance ₹{s.balance}
+              Rent {formatMoney(s.rent)} · Paid {formatMoney(s.paid)} · Balance {formatMoney(s.balance)}
             </p>
 
             <label className="text-sm t-muted">Amount (₹)</label>
@@ -650,8 +651,8 @@ export default function TenantDetailPage() {
             <p className="t-muted text-sm mb-4">{tenant.name}</p>
 
             <p className="text-sm t-muted mb-2">
-              Expected ₹{depositExpected} · Collected ₹{depositCollected} ·
-              Balance ₹{depositBalance}
+              Expected {formatMoney(depositExpected)} · Collected {formatMoney(depositCollected)} ·
+              Balance {formatMoney(depositBalance)}
             </p>
 
             <label className="text-sm t-muted">Amount (₹)</label>

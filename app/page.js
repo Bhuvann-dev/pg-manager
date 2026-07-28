@@ -14,6 +14,7 @@ import { getTenants, openWhatsApp } from "../services/tenantService";
 import { getPayments } from "../services/paymentService";
 import { getRooms, computeOccupancy } from "../services/roomService";
 import { rentStatus, summarizeMonth, MONTH_NAMES } from "../lib/rent";
+import { formatMoney } from "../lib/format";
 import { Loading } from "../components/States";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -114,20 +115,20 @@ export default function Dashboard() {
           tint="31,157,85"
           title="Collection Rate"
           value={`${summary.collectionRate}%`}
-          sub={`₹${summary.collected} of ₹${summary.expected}`}
+          sub={`${formatMoney(summary.collected)} of ${formatMoney(summary.expected)}`}
         />
         <StatCard
           icon={Wallet}
           tint="196,125,10"
           title="Collected"
-          value={`₹${summary.collected}`}
+          value={formatMoney(summary.collected)}
           sub="this month"
         />
         <StatCard
           icon={AlertTriangle}
           tint="200,65,47"
           title="Overdue"
-          value={`₹${summary.overdueAmount}`}
+          value={formatMoney(summary.overdueAmount)}
           sub={`${summary.overdue} tenant(s)`}
         />
       </div>
@@ -184,8 +185,8 @@ export default function Dashboard() {
                         {tenant.name}
                       </Link>
                       <div className="text-xs" style={{ color: "var(--text-faint)" }}>
-                        Room {tenant.roomNumber} · due {tenant.dueDate} · ₹
-                        {s.balance} due
+                        Room {tenant.roomNumber} · due {tenant.dueDate} ·{" "}
+                        {formatMoney(s.balance)} due
                       </div>
                     </div>
                   </div>
