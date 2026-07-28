@@ -58,6 +58,11 @@ export default function AddTenantPage() {
   const [deposit, setDeposit] =
     useState("");
 
+  const [joinDate, setJoinDate] =
+    useState(() =>
+      new Date().toISOString().slice(0, 10)
+    );
+
   const [tenants, setTenants] =
     useState([]);
 
@@ -338,6 +343,11 @@ export default function AddTenantPage() {
               10
             ) || 0,
 
+          joinDate:
+            row.JoinDate
+              ? new Date(row.JoinDate)
+              : new Date(),
+
           status:
             "active",
 
@@ -410,6 +420,11 @@ export default function AddTenantPage() {
         deposit:
           parseInt(deposit, 10) || 0,
 
+        joinDate:
+          joinDate
+            ? new Date(joinDate)
+            : new Date(),
+
         aadhaarPath: null,
 
         status: "active",
@@ -465,6 +480,7 @@ export default function AddTenantPage() {
         setRent("");
         setDueDate("");
         setDeposit("");
+        setJoinDate(new Date().toISOString().slice(0, 10));
 
         setAadhaarFile(null);
 
@@ -773,6 +789,23 @@ export default function AddTenantPage() {
             )
           }
           placeholder="e.g. 10000"
+          className={inputStyle}
+        />
+
+        {/* JOIN DATE */}
+
+        <label className="mt-4 block">
+
+          Join Date
+
+        </label>
+
+        <input
+          type="date"
+          value={joinDate}
+          onChange={(e) =>
+            setJoinDate(e.target.value)
+          }
           className={inputStyle}
         />
 

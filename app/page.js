@@ -196,7 +196,7 @@ export default function Dashboard() {
                       {STATUS_LABEL[s.status]}
                     </span>
                     <button
-                      onClick={() => openWhatsApp(tenant)}
+                      onClick={() => openWhatsApp(tenant, s.balance)}
                       className="btn btn-primary btn-sm"
                     >
                       <MessageCircle size={15} />

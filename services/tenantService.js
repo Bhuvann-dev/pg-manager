@@ -88,7 +88,7 @@ export const getTenant = async (tenantId, ownerId) => {
 SEND WHATSAPP REMINDER
 */
 
-export const openWhatsApp = (tenant) => {
+export const openWhatsApp = (tenant, amountDue) => {
   let phone = tenant.phone;
 
   // Clean phone number
@@ -110,8 +110,18 @@ export const openWhatsApp = (tenant) => {
     month: "long"
   });
 
+  // Amount owed — falls back to the full rent if no balance is passed.
+  const amount =
+    Number.isFinite(amountDue) && amountDue > 0
+      ? amountDue
+      : Number(tenant.rentAmount) || 0;
+
+  const amountLine = amount > 0 ? ` The amount due is ₹${amount}.` : "";
+
   const message =
-    `Hi ${tenant.name}, just a friendly reminder regarding your rent for ${monthName}. Thank you.`;
+    `Hi ${tenant.name}, just a friendly reminder regarding your rent for ${monthName}.` +
+    amountLine +
+    ` Thank you.`;
 
   const url =
     "https://wa.me/" +

@@ -34,7 +34,11 @@ import {
   RENT,
   DEPOSIT,
   MONTH_NAMES,
-  formatPaidDate
+  formatPaidDate,
+  formatDate,
+  joinDateOf,
+  tenureDays,
+  monthsPaid
 } from "../../../lib/rent";
 import { Loading, EmptyState } from "../../../components/States";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -307,12 +311,41 @@ export default function TenantDetailPage() {
           </p>
         </div>
 
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_STYLES[s.status]}`}
-        >
-          {STATUS_LABEL[s.status]}
-          {s.status === "partial" && ` ₹${s.paid}/₹${s.rent}`}
-        </span>
+        {tenant.status === "inactive" ? (
+          <span className="badge badge-neutral">
+            Left · {formatDate(tenant.leftDate)}
+          </span>
+        ) : (
+          <span className={STATUS_STYLES[s.status]}>
+            {STATUS_LABEL[s.status]}
+            {s.status === "partial" && ` ₹${s.paid}/₹${s.rent}`}
+          </span>
+        )}
+      </div>
+
+      {/* Tenure */}
+      <div className="card rounded-xl p-5 mb-4">
+        <h2 className="font-semibold mb-4">Tenure</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <Metric label="Joined" value={formatDate(joinDateOf(tenant))} />
+          <Metric
+            label={tenant.status === "inactive" ? "Left" : "Status"}
+            value={
+              tenant.status === "inactive"
+                ? formatDate(tenant.leftDate)
+                : "Active"
+            }
+            accent={tenant.status === "inactive" ? undefined : "t-success"}
+          />
+          <Metric
+            label="Days stayed"
+            value={tenureDays(tenant) ?? "—"}
+          />
+          <Metric
+            label="Months paid"
+            value={monthsPaid(tenant, payments)}
+          />
+        </div>
       </div>
 
       {/* This month */}
@@ -405,7 +438,7 @@ export default function TenantDetailPage() {
             </a>
 
             <button
-              onClick={() => openWhatsApp(tenant)}
+              onClick={() => openWhatsApp(tenant, s.balance)}
               className="btn btn-primary w-full justify-start"
             >
               <MessageCircle size={16} /> WhatsApp reminder
@@ -430,12 +463,14 @@ export default function TenantDetailPage() {
               {hasDoc ? "View ID document" : "No ID document"}
             </button>
 
-            <button
-              onClick={handleLeft}
-              className="btn btn-danger w-full justify-start"
-            >
-              <LogOut size={16} /> Mark as left
-            </button>
+            {tenant.status !== "inactive" && (
+              <button
+                onClick={handleLeft}
+                className="btn btn-danger w-full justify-start"
+              >
+                <LogOut size={16} /> Mark as left
+              </button>
+            )}
           </div>
         </div>
       </div>

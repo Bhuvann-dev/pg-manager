@@ -34,6 +34,8 @@ A person staying in the property. Soft-deleted on departure (`status = "inactive
 | `roomNumber` | string | yes | References a `rooms.roomNumber` for this owner. |
 | `rentAmount` | int | yes | Monthly rent in ₹ (> 0). |
 | `dueDate` | int (1–31) | yes | Day of month rent is due. Drives overdue calculation. |
+| `deposit` | int | no | Expected security deposit in ₹ (0 if none). Collection tracked via `deposit`-type payments. |
+| `joinDate` | timestamp | no | Move-in date. Drives tenure/days-stayed. Falls back to `createdAt` if absent. |
 | `aadhaarPath` | string \| null | no | **Storage path** (not a public URL) to the ID document. |
 | `status` | `"active"` \| `"inactive"` | yes | `inactive` = tenant has left; hidden from active lists, history kept. |
 | `leftDate` | timestamp | no | Set when marked as left. |
@@ -48,10 +50,11 @@ An append-only rent **ledger**. One document per rent payment. A tenant's status
 | `ownerId` | string | yes | `auth.uid` of the owning account. |
 | `tenantId` | string | yes | `tenants` document id this payment is for. |
 | `tenantName` | string | yes | Denormalized for display in history without a join. |
-| `amount` | int | yes | Amount paid in ₹. |
+| `type` | `"rent"` \| `"deposit"` | no | Defaults to `rent` (legacy entries have no type). `deposit` entries track the security deposit; a negative `deposit` amount is a refund. |
+| `amount` | int | yes | Amount paid in ₹ (negative for a deposit refund). Partial rent = multiple `rent` entries in a month. |
 | `month` | int (1–12) | yes | Rent month this payment covers. |
 | `year` | int | yes | Rent year this payment covers. |
-| `status` | `"paid"` | yes | Reserved for future states (partial, etc.). |
+| `status` | `"paid"` \| `"refunded"` | yes | Payment state. |
 | `paidDate` | timestamp | yes | When the payment was received. |
 | `createdAt` | timestamp | yes | Set on creation. |
 

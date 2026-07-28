@@ -24,10 +24,14 @@ import {
   rentStatus,
   RENT,
   MONTH_NAMES,
-  formatPaidDate
+  formatPaidDate,
+  formatDate,
+  toJsDate,
+  tenureDays,
+  monthsPaid
 } from "../../lib/rent";
 import { Loading, EmptyState, SkeletonRows } from "../../components/States";
-import { Search, AlertTriangle, History, Users } from "lucide-react";
+import { Search, AlertTriangle, History, Users, Archive } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const STATUS_STYLES = {
@@ -51,6 +55,7 @@ export default function TenantsPage() {
   const [payingTenant, setPayingTenant] = useState(null);
   const [payAmount, setPayAmount] = useState("");
 
+  const [view, setView] = useState("active"); // "active" | "past"
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -71,7 +76,7 @@ export default function TenantsPage() {
       getPayments(user.uid)
     ]);
 
-    setTenants(tenantData.filter((t) => t.status !== "inactive"));
+    setTenants(tenantData);
     setPayments(paymentData);
     setLoading(false);
   };
@@ -211,7 +216,10 @@ export default function TenantsPage() {
           ? parseInt(editingTenant.dueDate, 10)
           : null,
         deposit: parseInt(editingTenant.deposit, 10) || 0,
-        aadhaarPath
+        aadhaarPath,
+        ...(editingTenant.joinDateStr
+          ? { joinDate: new Date(editingTenant.joinDateStr) }
+          : {})
       };
 
       const success = await updateTenant(editingTenant.id, updatedTenant);
@@ -230,10 +238,23 @@ export default function TenantsPage() {
   };
 
   /*
-  FILTER + SORT
+  ACTIVE / PAST split
   */
 
-  let filteredTenants = tenants.filter((tenant) => {
+  const activeTenants = tenants.filter((t) => t.status !== "inactive");
+  const pastTenants = tenants
+    .filter((t) => t.status === "inactive")
+    .sort((a, b) => {
+      const la = toJsDate(a.leftDate)?.getTime() || 0;
+      const lb = toJsDate(b.leftDate)?.getTime() || 0;
+      return lb - la;
+    });
+
+  /*
+  FILTER + SORT (active view)
+  */
+
+  let filteredTenants = activeTenants.filter((tenant) => {
     const matchesSearch =
       tenant.name.toLowerCase().includes(search.toLowerCase()) ||
       tenant.roomNumber.toString().includes(search);
@@ -267,9 +288,39 @@ export default function TenantsPage() {
     <div>
       <div className="card rounded-xl overflow-hidden shadow">
         <div className="p-4 border-b border-[color:var(--border)] flex flex-col gap-4">
-          <h2 className="text-xl font-semibold">Tenants</h2>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="text-xl font-semibold">Tenants</h2>
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Active / Past toggle */}
+            <div
+              className="inline-flex rounded-lg p-1"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
+            >
+              {[
+                { key: "active", label: `Active (${activeTenants.length})` },
+                { key: "past", label: `Past (${pastTenants.length})` }
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setView(tab.key)}
+                  className="px-3 py-1.5 rounded-md text-sm font-medium transition"
+                  style={
+                    view === tab.key
+                      ? { background: "var(--surface)", color: "var(--accent-ink)", border: "1px solid var(--accent)" }
+                      : { color: "var(--text-muted)" }
+                  }
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div
+            className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${
+              view === "past" ? "hidden" : ""
+            }`}
+          >
             {/* Search */}
             <div className="relative w-full md:w-72">
               <Search
@@ -320,21 +371,67 @@ export default function TenantsPage() {
 
         {loading ? (
           <SkeletonRows rows={5} cols={7} />
+        ) : view === "past" ? (
+          pastTenants.length === 0 ? (
+            <EmptyState
+              icon={Archive}
+              title="No past tenants"
+              message="Tenants you mark as left will appear here with their full history."
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead style={{ background: "var(--surface-2)" }}>
+                  <tr>
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-left">Room</th>
+                    <th className="p-3 text-left">Joined</th>
+                    <th className="p-3 text-left">Left</th>
+                    <th className="p-3 text-right">Days stayed</th>
+                    <th className="p-3 text-right">Months paid</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pastTenants.map((tenant) => (
+                    <tr
+                      key={tenant.id}
+                      className="border-b border-[color:var(--border)] hover:bg-[color:var(--surface-2)]"
+                    >
+                      <td className="p-3">
+                        <Link
+                          href={`/tenants/${tenant.id}`}
+                          className="t-accent hover:underline font-medium"
+                        >
+                          {tenant.name}
+                        </Link>
+                      </td>
+                      <td className="p-3">{tenant.roomNumber}</td>
+                      <td className="p-3 num">{formatDate(tenant.joinDate || tenant.createdAt)}</td>
+                      <td className="p-3 num">{formatDate(tenant.leftDate)}</td>
+                      <td className="p-3 text-right num">
+                        {tenureDays(tenant) ?? "—"}
+                      </td>
+                      <td className="p-3 text-right num">
+                        {monthsPaid(tenant, payments)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : filteredTenants.length === 0 ? (
           <EmptyState
             icon={Users}
-            title={tenants.length === 0 ? "No tenants yet" : "No matches"}
+            title={activeTenants.length === 0 ? "No tenants yet" : "No matches"}
             message={
-              tenants.length === 0
+              activeTenants.length === 0
                 ? "Add your first tenant to start tracking rent."
                 : "Try clearing the search or due-date filters."
             }
             action={
-              tenants.length === 0 ? (
-                <Link
-                  href="/add-tenant"
-                  className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-lg font-medium"
-                >
+              activeTenants.length === 0 ? (
+                <Link href="/add-tenant" className="btn btn-primary">
                   Add Tenant
                 </Link>
               ) : null
@@ -432,7 +529,7 @@ export default function TenantsPage() {
 
                         {!settled && (
                           <button
-                            onClick={() => openWhatsApp(tenant)}
+                            onClick={() => openWhatsApp(tenant, s.balance)}
                             className="btn btn-primary btn-sm"
                           >
                             Reminder
@@ -656,6 +753,26 @@ export default function TenantsPage() {
                 setEditingTenant({
                   ...editingTenant,
                   deposit: Number(e.target.value)
+                })
+              }
+            />
+
+            <label className="text-sm t-muted">Join Date</label>
+            <input
+              type="date"
+              className="input mb-4 mt-1"
+              value={
+                editingTenant.joinDateStr ??
+                (toJsDate(editingTenant.joinDate)
+                  ? toJsDate(editingTenant.joinDate)
+                      .toISOString()
+                      .slice(0, 10)
+                  : "")
+              }
+              onChange={(e) =>
+                setEditingTenant({
+                  ...editingTenant,
+                  joinDateStr: e.target.value
                 })
               }
             />
