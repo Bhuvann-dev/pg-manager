@@ -6,6 +6,7 @@
 
 *Sign in → add your rooms and tenants → track rent, occupancy, and IDs in one place → nudge overdue tenants on WhatsApp.*
 
+[![Live Demo](https://img.shields.io/badge/demo-live-2ea043)](https://pg-manager-nu.vercel.app/)
 [![Status](https://img.shields.io/badge/status-in%20development-yellow)]()
 [![Frontend](https://img.shields.io/badge/frontend-Next.js%20%2B%20React-black)]()
 [![Backend](https://img.shields.io/badge/backend-Firebase-ffca28)]()
@@ -13,8 +14,7 @@
 [![Auth](https://img.shields.io/badge/auth-Firebase%20Auth-4285F4)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
-<!-- Replace with a real link once deployed -->
-**[ Live Demo (coming soon) ]()** · **[PRD](docs/prd.md)** · **[Architecture](docs/architecture.md)** · **[Decisions](docs/decisions.md)** · **[Data Model](docs/data-model.md)**
+**[Live Demo](https://pg-manager-nu.vercel.app/)** · **[PRD](docs/prd.md)** · **[Architecture](docs/architecture.md)** · **[Decisions](docs/decisions.md)** · **[Data Model](docs/data-model.md)**
 
 </div>
 
@@ -151,7 +151,7 @@ To run a **no-login local sandbox** instead, set `NEXT_PUBLIC_AUTH_ENABLED=false
 - [x] Tenant detail page with quick actions and room transfer
 - [x] Dashboard collection insights + follow-up list
 - [x] Monthly rent report with Excel / PDF export
-- [ ] Deployed public demo
+- [x] Deployed public demo — [pg-manager-nu.vercel.app](https://pg-manager-nu.vercel.app/)
 - [ ] Multi-property support per owner
 - [ ] Automated recurring reminders
 
