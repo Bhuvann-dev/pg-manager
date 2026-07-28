@@ -58,6 +58,17 @@ An append-only rent **ledger**. One document per rent payment. A tenant's status
 | `paidDate` | timestamp | yes | When the payment was received. |
 | `createdAt` | timestamp | yes | Set on creation. |
 
+### `settings`
+
+Per-owner app settings, one document per owner, keyed by the owner's uid.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `ownerId` | string | yes | `auth.uid`; also the document id. |
+| `pgName` | string | no | Property name shown as branding in the sidebar. |
+| `ownerName` | string | no | Owner's display name. |
+| `upiId` | string | no | Owner's UPI ID, stored for upcoming rent payment links. |
+
 ---
 
 ## Derived values (computed in the client, never stored)

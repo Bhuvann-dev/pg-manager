@@ -46,6 +46,11 @@ service cloud.firestore {
       allow update, delete: if ownsExisting();
     }
 
+    // Owner settings live at settings/{ownerId} — the doc id is the owner.
+    match /settings/{ownerId} {
+      allow read, write: if isSignedIn() && ownerId == uid();
+    }
+
     // Everything else is denied by default.
   }
 }

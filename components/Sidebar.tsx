@@ -8,6 +8,7 @@ import {
   UserPlus,
   DoorOpen,
   FileBarChart,
+  Settings,
   Menu,
   ChevronLeft,
   LogOut,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { AUTH_ENABLED } from "../lib/config";
 import ThemeToggle from "./ThemeToggle";
 
@@ -22,6 +24,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { settings } = useSettings();
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
@@ -34,7 +37,8 @@ export default function Sidebar() {
     { name: "Rooms", href: "/rooms", icon: DoorOpen },
     { name: "Tenants", href: "/tenants", icon: Users },
     { name: "Add Tenant", href: "/add-tenant", icon: UserPlus },
-    { name: "Reports", href: "/reports", icon: FileBarChart }
+    { name: "Reports", href: "/reports", icon: FileBarChart },
+    { name: "Settings", href: "/settings", icon: Settings }
   ];
 
   return (
@@ -57,8 +61,8 @@ export default function Sidebar() {
             >
               <Home size={18} />
             </span>
-            <span className="font-bold text-[15px] tracking-tight">
-              PG Manager
+            <span className="font-bold text-[15px] tracking-tight truncate">
+              {settings.pgName || "PG Manager"}
             </span>
           </div>
         )}

@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Settings } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { AUTH_ENABLED } from "../lib/config";
 import Sidebar from "./Sidebar";
@@ -51,8 +53,15 @@ export default function AppShell({ children }) {
     <div className="flex min-h-screen">
       <Sidebar />
 
-      {/* Floating theme toggle for mobile (sidebar hosts it on desktop) */}
-      <div className="md:hidden fixed top-3 right-3 z-40">
+      {/* Floating settings + theme toggle for mobile (sidebar hosts these on desktop) */}
+      <div className="md:hidden fixed top-3 right-3 z-40 flex items-center gap-2">
+        <Link
+          href="/settings"
+          aria-label="Settings"
+          className="card grid place-items-center h-10 w-10"
+        >
+          <Settings size={18} />
+        </Link>
         <div className="card p-0.5">
           <ThemeToggle />
         </div>

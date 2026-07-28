@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
+import { SettingsProvider } from "../contexts/SettingsContext";
 import { ToastProvider } from "../contexts/ToastContext";
 import AppShell from "../components/AppShell";
 
@@ -42,15 +43,19 @@ export default function RootLayout({
 
         <AuthProvider>
 
-          <ToastProvider>
+          <SettingsProvider>
 
-            <AppShell>
+            <ToastProvider>
 
-              {children}
+              <AppShell>
 
-            </AppShell>
+                {children}
 
-          </ToastProvider>
+              </AppShell>
+
+            </ToastProvider>
+
+          </SettingsProvider>
 
         </AuthProvider>
 
