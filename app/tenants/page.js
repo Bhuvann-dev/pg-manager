@@ -20,6 +20,7 @@ import {
   getDocumentUrl,
   isStoragePath
 } from "../../services/storageService";
+import { getRooms, computeOccupancy } from "../../services/roomService";
 import {
   rentStatus,
   RENT,
@@ -27,10 +28,15 @@ import {
   formatPaidDate,
   formatDate,
   toJsDate,
+  joinDateOf,
+  monthKey,
   tenureDays,
   monthsPaid
 } from "../../lib/rent";
 import { formatMoney } from "../../lib/format";
+
+const PHONE_RE = /^[6-9]\d{9}$/;
+const PAGE_SIZE = 12;
 import { Loading, EmptyState, SkeletonRows } from "../../components/States";
 import { Search, AlertTriangle, History, Users, Archive } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -49,6 +55,7 @@ export default function TenantsPage() {
 
   const [tenants, setTenants] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [editingTenant, setEditingTenant] = useState(null);
@@ -63,6 +70,7 @@ export default function TenantsPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!user) return;
@@ -70,17 +78,24 @@ export default function TenantsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Reset to the first page whenever the view or filters change.
+  useEffect(() => {
+    setPage(1);
+  }, [view, search, fromDate, toDate, sortOrder]);
+
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
 
-    const [tenantData, paymentData] = await Promise.all([
+    const [tenantData, paymentData, roomData] = await Promise.all([
       getTenants(user.uid),
-      getPayments(user.uid)
+      getPayments(user.uid),
+      getRooms(user.uid)
     ]);
 
     setTenants(tenantData);
     setPayments(paymentData);
+    setRooms(roomData);
     setLoading(false);
   };
 
@@ -190,8 +205,49 @@ export default function TenantsPage() {
   EDIT SAVE
   */
 
+  const validateEdit = (t) => {
+    if (!t.name || !t.name.trim()) return "Name is required.";
+    if (!PHONE_RE.test(String(t.phone || "")))
+      return "Enter a valid 10-digit phone number.";
+    if (tenants.some((x) => x.id !== t.id && x.phone === t.phone))
+      return "Another tenant already has that phone number.";
+
+    const rent = parseInt(t.rentAmount, 10);
+    if (!Number.isFinite(rent) || rent <= 0) return "Enter a valid rent amount.";
+
+    const due = parseInt(t.dueDate, 10);
+    if (!Number.isFinite(due) || due < 1 || due > 31)
+      return "Due date must be between 1 and 31.";
+
+    // Only validate the room if the owner has defined rooms.
+    if (rooms.length > 0) {
+      const room = rooms.find(
+        (r) => String(r.roomNumber) === String(t.roomNumber)
+      );
+      if (!room)
+        return "Pick an existing room (add it on the Rooms page first).";
+
+      const original = tenants.find((x) => x.id === t.id);
+      const movingRoom =
+        !original || String(original.roomNumber) !== String(t.roomNumber);
+      if (movingRoom) {
+        const occ = computeOccupancy(room, tenants); // excludes this tenant (state still holds old room)
+        if (occ >= (Number(room.capacity) || 0))
+          return `Room ${room.roomNumber} is full.`;
+      }
+    }
+
+    return null;
+  };
+
   const handleSaveEdit = async () => {
     try {
+      const error = validateEdit(editingTenant);
+      if (error) {
+        toast(error, "error");
+        return;
+      }
+
       let aadhaarPath =
         editingTenant.aadhaarPath || editingTenant.aadhaarFile || null;
 
@@ -210,11 +266,33 @@ export default function TenantsPage() {
         }
       }
 
+      // Rent-change history: when rent changes, record the old rate from the
+      // join month and the new rate from this month, so past months are
+      // computed at the rate that applied then.
+      const original = tenants.find((x) => x.id === editingTenant.id);
+      const oldRent = Number(original?.rentAmount) || 0;
+      const newRent = parseInt(editingTenant.rentAmount, 10) || 0;
+      let rentHistory = Array.isArray(original?.rentHistory)
+        ? [...original.rentHistory]
+        : [];
+
+      if (newRent !== oldRent) {
+        const nowKey = monthKey(today.getFullYear(), today.getMonth() + 1);
+        if (rentHistory.length === 0 && oldRent > 0) {
+          const jd = joinDateOf(original || editingTenant) || today;
+          rentHistory.push({
+            amount: oldRent,
+            effectiveFrom: monthKey(jd.getFullYear(), jd.getMonth() + 1)
+          });
+        }
+        rentHistory.push({ amount: newRent, effectiveFrom: nowKey });
+      }
+
       const updatedTenant = {
         name: editingTenant.name,
         phone: editingTenant.phone,
         roomNumber: editingTenant.roomNumber,
-        rentAmount: parseInt(editingTenant.rentAmount, 10),
+        rentAmount: newRent,
         dueDate: editingTenant.dueDate
           ? parseInt(editingTenant.dueDate, 10)
           : null,
@@ -222,7 +300,8 @@ export default function TenantsPage() {
         aadhaarPath,
         ...(editingTenant.joinDateStr
           ? { joinDate: new Date(editingTenant.joinDateStr) }
-          : {})
+          : {}),
+        ...(newRent !== oldRent ? { rentHistory } : {})
       };
 
       const success = await updateTenant(editingTenant.id, updatedTenant);
@@ -286,6 +365,43 @@ export default function TenantsPage() {
     if (s.status === "overdue") return "Overdue";
     return "Pending";
   };
+
+  /*
+  PAGINATION
+  */
+
+  const viewList = view === "past" ? pastTenants : filteredTenants;
+  const totalPages = Math.max(1, Math.ceil(viewList.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * PAGE_SIZE;
+  const pagedActive = filteredTenants.slice(pageStart, pageStart + PAGE_SIZE);
+  const pagedPast = pastTenants.slice(pageStart, pageStart + PAGE_SIZE);
+
+  const Pagination = () =>
+    viewList.length > PAGE_SIZE ? (
+      <div className="flex items-center justify-between p-3 border-t border-[color:var(--border)] text-sm">
+        <span style={{ color: "var(--text-muted)" }}>
+          {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, viewList.length)} of{" "}
+          {viewList.length}
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage <= 1}
+            className="btn btn-secondary btn-sm"
+          >
+            Prev
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage >= totalPages}
+            className="btn btn-secondary btn-sm"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    ) : null;
 
   return (
     <div>
@@ -395,7 +511,7 @@ export default function TenantsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pastTenants.map((tenant) => (
+                  {pagedPast.map((tenant) => (
                     <tr
                       key={tenant.id}
                       className="border-b border-[color:var(--border)] hover:bg-[color:var(--surface-2)]"
@@ -421,6 +537,7 @@ export default function TenantsPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination />
             </div>
           )
         ) : filteredTenants.length === 0 ? (
@@ -456,7 +573,7 @@ export default function TenantsPage() {
               </thead>
 
               <tbody>
-                {filteredTenants.map((tenant) => {
+                {pagedActive.map((tenant) => {
                   const s = rentStatus(tenant, payments, today);
                   const settled = s.status === "paid";
 
@@ -566,6 +683,7 @@ export default function TenantsPage() {
                 })}
               </tbody>
             </table>
+            <Pagination />
           </div>
         )}
       </div>
