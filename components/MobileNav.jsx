@@ -26,10 +26,9 @@ export default function MobileNav() {
             <div
                 className="flex justify-around items-center rounded-2xl px-1 py-1.5"
                 style={{
-                    background: "rgba(18, 26, 43, 0.85)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid var(--border)",
-                    boxShadow: "0 8px 30px -10px rgba(0,0,0,0.7)"
+                    background: "var(--surface)",
+                    border: "1px solid var(--border-strong)",
+                    boxShadow: "0 8px 24px -12px rgba(38,35,28,0.4)"
                 }}
             >
                 {items.map((item) => {
@@ -44,9 +43,8 @@ export default function MobileNav() {
                             style={
                                 active
                                     ? {
-                                          color: "#fff",
-                                          background:
-                                              "linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2))"
+                                          color: "var(--accent-ink)",
+                                          background: "var(--accent-soft)"
                                       }
                                     : { color: "var(--text-faint)" }
                             }

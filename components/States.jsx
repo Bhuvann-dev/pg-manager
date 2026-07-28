@@ -43,13 +43,13 @@ A shimmering placeholder row, sized to the tenants/rooms tables.
 
 export function SkeletonRows({ rows = 5, cols = 6 }) {
   return (
-    <div className="divide-y divide-slate-800">
+    <div className="divide-y divide-[color:var(--border)]">
       {Array.from({ length: rows }).map((_, r) => (
         <div key={r} className="flex gap-4 p-3">
           {Array.from({ length: cols }).map((_, c) => (
             <div
               key={c}
-              className="h-4 flex-1 rounded bg-slate-800 animate-pulse"
+              className="h-4 flex-1 rounded bg-[color:var(--surface-3)] animate-pulse"
             />
           ))}
         </div>

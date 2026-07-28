@@ -180,12 +180,12 @@ export default function ReportsPage() {
             <Summary
               title="Collected"
               value={`₹${totals.collected}`}
-              accent="text-green-400"
+              accent="text-[#0f6b39]"
             />
             <Summary
               title="Outstanding"
               value={`₹${totals.outstanding}`}
-              accent={totals.outstanding > 0 ? "text-red-400" : undefined}
+              accent={totals.outstanding > 0 ? "text-[#972f20]" : undefined}
             />
             <Summary title="Collection Rate" value={`${totals.rate}%`} />
           </div>
@@ -214,10 +214,10 @@ export default function ReportsPage() {
                     <td
                       className={`p-3 font-medium ${
                         r.status === "Paid"
-                          ? "text-green-400"
+                          ? "text-[#0f6b39]"
                           : r.status === "Partial"
-                          ? "text-amber-400"
-                          : "text-red-400"
+                          ? "text-[#8a5a06]"
+                          : "text-[#972f20]"
                       }`}
                     >
                       {r.status}
@@ -226,7 +226,7 @@ export default function ReportsPage() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-slate-800 font-semibold">
+                <tr className="font-semibold" style={{ background: "var(--surface-2)" }}>
                   <td className="p-3" colSpan={2}>
                     Total ({rows.length})
                   </td>

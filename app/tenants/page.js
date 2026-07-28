@@ -31,10 +31,10 @@ import { Search, AlertTriangle, History, Users } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const STATUS_STYLES = {
-  paid: "text-green-400",
-  partial: "text-amber-400",
-  overdue: "text-red-400",
-  pending: "text-yellow-400"
+  paid: "text-[#0f6b39]",
+  partial: "text-[#8a5a06]",
+  overdue: "text-[#972f20]",
+  pending: "text-[#7a5604]"
 };
 
 export default function TenantsPage() {
@@ -365,14 +365,14 @@ export default function TenantsPage() {
                       key={tenant.id}
                       className={`border-b border-[color:var(--border)] transition ${
                         s.status === "overdue"
-                          ? "bg-red-900/30 hover:bg-red-900/40"
-                          : "hover:bg-slate-800"
+                          ? "bg-[#f7e4e0] hover:bg-[#f2d5cf]"
+                          : "hover:bg-[color:var(--surface-2)]"
                       }`}
                     >
                       <td className="p-3">
                         <Link
                           href={`/tenants/${tenant.id}`}
-                          className="text-blue-400 hover:underline font-medium"
+                          className="text-[color:var(--accent)] hover:underline font-medium"
                         >
                           {tenant.name}
                         </Link>
@@ -411,7 +411,7 @@ export default function TenantsPage() {
                                 tenant.aadhaarPath || tenant.aadhaarFile
                               )
                             }
-                            className="text-blue-400 underline"
+                            className="text-[color:var(--accent)] underline"
                           >
                             View
                           </button>
@@ -527,7 +527,7 @@ export default function TenantsPage() {
 
               <button
                 onClick={() => setLedgerTenant(null)}
-                className="text-[color:var(--text-muted)] hover:text-white text-sm"
+                className="text-[color:var(--text-muted)] hover:text-[color:var(--text)] text-sm"
               >
                 Close
               </button>
@@ -552,7 +552,7 @@ export default function TenantsPage() {
                       <div className="font-medium flex items-center gap-2">
                         {MONTH_NAMES[p.month - 1]} {p.year}
                         {p.type === "deposit" && (
-                          <span className="text-xs bg-slate-700 px-2 py-0.5 rounded">
+                          <span className="text-xs badge-neutral">
                             deposit
                           </span>
                         )}
@@ -564,13 +564,13 @@ export default function TenantsPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className="text-green-400 font-semibold">
+                      <span className="text-[#0f6b39] font-semibold">
                         ₹{Math.max(Number(p.amount) || 0, 0)}
                       </span>
 
                       <button
                         onClick={() => handleRemovePayment(p)}
-                        className="text-red-400 hover:text-red-300 text-xs"
+                        className="text-[#972f20] hover:text-red-300 text-xs"
                       >
                         Remove
                       </button>
@@ -669,7 +669,7 @@ export default function TenantsPage() {
                       editingTenant.aadhaarPath || editingTenant.aadhaarFile
                     )
                   }
-                  className="text-blue-400 underline"
+                  className="text-[color:var(--accent)] underline"
                 >
                   View Current Document
                 </button>

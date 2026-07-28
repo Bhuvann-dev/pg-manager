@@ -46,10 +46,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm card p-8">
         <div className="flex items-center gap-2.5 mb-6">
           <span
-            className="grid place-items-center h-10 w-10 rounded-xl text-white shadow-lg text-lg"
-            style={{
-              background: "linear-gradient(135deg, var(--accent), var(--accent-2))"
-            }}
+            className="grid place-items-center h-10 w-10 rounded-lg text-white text-lg"
+            style={{ background: "var(--accent)" }}
           >
             🏠
           </span>

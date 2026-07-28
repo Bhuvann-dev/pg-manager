@@ -253,7 +253,7 @@ export default function RoomsPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <DoorOpen size={20} className="text-blue-400" />
+                      <DoorOpen size={20} className="text-[color:var(--accent)]" />
                       <span className="text-lg font-semibold">
                         Room {room.roomNumber}
                       </span>
@@ -262,7 +262,7 @@ export default function RoomsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingRoom(room)}
-                        className="text-[color:var(--text-muted)] hover:text-white"
+                        className="text-[color:var(--text-muted)] hover:text-[color:var(--text)]"
                         aria-label="Edit room"
                       >
                         <Pencil size={16} />
@@ -270,7 +270,7 @@ export default function RoomsPage() {
 
                       <button
                         onClick={() => handleDelete(room)}
-                        className="text-[color:var(--text-muted)] hover:text-red-400"
+                        className="text-[color:var(--text-muted)] hover:text-[#972f20]"
                         aria-label="Delete room"
                       >
                         <Trash2 size={16} />
@@ -289,7 +289,7 @@ export default function RoomsPage() {
 
                   <div
                     className={`mt-1 text-sm font-medium ${
-                      full ? "text-red-400" : "text-green-400"
+                      full ? "text-[#972f20]" : "text-[#0f6b39]"
                     }`}
                   >
                     {full ? "Full" : `${vacancy} bed(s) free`}

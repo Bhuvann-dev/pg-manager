@@ -51,10 +51,8 @@ export default function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             <span
-              className="grid place-items-center h-9 w-9 rounded-xl text-white shadow-lg"
-              style={{
-                background: "linear-gradient(135deg, var(--accent), var(--accent-2))"
-              }}
+              className="grid place-items-center h-9 w-9 rounded-lg text-white"
+              style={{ background: "var(--accent)" }}
             >
               <Home size={18} />
             </span>
@@ -90,10 +88,9 @@ export default function Sidebar() {
               style={
                 active
                   ? {
-                      background:
-                        "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.14))",
-                      color: "#fff",
-                      border: "1px solid rgba(99,102,241,0.35)"
+                      background: "var(--accent-soft)",
+                      color: "var(--accent-ink)",
+                      border: "1px solid var(--accent)"
                     }
                   : { color: "var(--text-muted)" }
               }

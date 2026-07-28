@@ -40,10 +40,10 @@ import { Loading, EmptyState } from "../../../components/States";
 import { useAuth } from "../../../contexts/AuthContext";
 
 const STATUS_STYLES = {
-  paid: "bg-green-900/40 text-green-300",
-  partial: "bg-amber-900/40 text-amber-300",
-  overdue: "bg-red-900/40 text-red-300",
-  pending: "bg-yellow-900/40 text-yellow-300"
+  paid: "badge badge-success",
+  partial: "badge badge-warning",
+  overdue: "badge badge-danger",
+  pending: "badge badge-pending"
 };
 
 const STATUS_LABEL = {
@@ -269,7 +269,7 @@ export default function TenantDetailPage() {
         action={
           <Link
             href="/tenants"
-            className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-lg font-medium"
+            className="btn btn-primary"
           >
             Back to Tenants
           </Link>
@@ -293,7 +293,7 @@ export default function TenantDetailPage() {
     <div className="max-w-3xl">
       <Link
         href="/tenants"
-        className="inline-flex items-center gap-1 text-[color:var(--text-muted)] hover:text-white text-sm mb-4"
+        className="inline-flex items-center gap-1 text-[color:var(--text-muted)] hover:text-[color:var(--text)] text-sm mb-4"
       >
         <ArrowLeft size={16} /> Back to Tenants
       </Link>
@@ -333,11 +333,11 @@ export default function TenantDetailPage() {
 
         <div className="grid grid-cols-3 gap-4 text-center">
           <Metric label="Rent" value={`₹${s.rent}`} />
-          <Metric label="Paid" value={`₹${s.paid}`} accent="text-green-400" />
+          <Metric label="Paid" value={`₹${s.paid}`} accent="text-[#0f6b39]" />
           <Metric
             label="Balance"
             value={`₹${s.balance}`}
-            accent={s.balance > 0 ? "text-red-400" : "text-green-400"}
+            accent={s.balance > 0 ? "text-[#972f20]" : "text-[#0f6b39]"}
           />
         </div>
       </div>
@@ -372,12 +372,12 @@ export default function TenantDetailPage() {
           <Metric
             label="Collected"
             value={`₹${depositCollected}`}
-            accent="text-green-400"
+            accent="text-[#0f6b39]"
           />
           <Metric
             label="Balance"
             value={`₹${depositBalance}`}
-            accent={depositBalance > 0 ? "text-amber-400" : "text-green-400"}
+            accent={depositBalance > 0 ? "text-[#8a5a06]" : "text-[#0f6b39]"}
           />
         </div>
       </div>
@@ -459,7 +459,7 @@ export default function TenantDetailPage() {
                   <div className="font-medium flex items-center gap-2">
                     {MONTH_NAMES[p.month - 1]} {p.year}
                     {p.type === "deposit" && (
-                      <span className="text-xs bg-slate-700 px-2 py-0.5 rounded">
+                      <span className="text-xs badge-neutral">
                         {(Number(p.amount) || 0) < 0 ? "refund" : "deposit"}
                       </span>
                     )}
@@ -473,8 +473,8 @@ export default function TenantDetailPage() {
                   <span
                     className={`font-semibold ${
                       (Number(p.amount) || 0) < 0
-                        ? "text-amber-400"
-                        : "text-green-400"
+                        ? "text-[#8a5a06]"
+                        : "text-[#0f6b39]"
                     }`}
                   >
                     {(Number(p.amount) || 0) < 0
@@ -483,7 +483,7 @@ export default function TenantDetailPage() {
                   </span>
                   <button
                     onClick={() => handleRemovePayment(p)}
-                    className="text-red-400 hover:text-red-300 text-xs"
+                    className="text-[#972f20] hover:text-red-300 text-xs"
                   >
                     Remove
                   </button>
@@ -546,7 +546,7 @@ export default function TenantDetailPage() {
             </p>
 
             {rooms.length === 0 ? (
-              <p className="text-yellow-400 text-sm mb-4">
+              <p className="text-[#7a5604] text-sm mb-4">
                 No rooms defined yet.
               </p>
             ) : (

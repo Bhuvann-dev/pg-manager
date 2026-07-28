@@ -33,14 +33,6 @@ const STATUS_LABEL = {
   pending: "Pending"
 };
 
-const AVATAR_COLORS = [
-  "linear-gradient(135deg,#6366f1,#8b5cf6)",
-  "linear-gradient(135deg,#0ea5e9,#22d3ee)",
-  "linear-gradient(135deg,#f59e0b,#f97316)",
-  "linear-gradient(135deg,#10b981,#34d399)",
-  "linear-gradient(135deg,#ec4899,#f43f5e)"
-];
-
 const initials = (name) =>
   name
     .split(" ")
@@ -113,27 +105,27 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={Users}
-          tint="99,102,241"
+          tint="15,138,126"
           title="Total Tenants"
           value={summary.total}
         />
         <StatCard
           icon={TrendingUp}
-          tint="52,211,153"
+          tint="31,157,85"
           title="Collection Rate"
           value={`${summary.collectionRate}%`}
           sub={`₹${summary.collected} of ₹${summary.expected}`}
         />
         <StatCard
           icon={Wallet}
-          tint="14,165,233"
+          tint="196,125,10"
           title="Collected"
           value={`₹${summary.collected}`}
           sub="this month"
         />
         <StatCard
           icon={AlertTriangle}
-          tint="248,113,113"
+          tint="200,65,47"
           title="Overdue"
           value={`₹${summary.overdueAmount}`}
           sub={`${summary.overdue} tenant(s)`}
@@ -168,7 +160,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="card divide-y" style={{ borderColor: "var(--border)" }}>
-              {followUps.map(({ tenant, s }, i) => (
+              {followUps.map(({ tenant, s }) => (
                 <div
                   key={tenant.id}
                   className="flex items-center justify-between gap-3 p-4"
@@ -176,8 +168,11 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span
-                      className="grid place-items-center h-10 w-10 rounded-full text-sm font-bold text-white shrink-0"
-                      style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                      className="grid place-items-center h-10 w-10 rounded-lg text-sm font-bold shrink-0"
+                      style={{
+                        background: "var(--accent-soft)",
+                        color: "var(--accent-ink)"
+                      }}
                     >
                       {initials(tenant.name)}
                     </span>
@@ -220,8 +215,8 @@ export default function Dashboard() {
           <div className="card p-5">
             <div className="flex items-center gap-3 mb-4">
               <span
-                className="grid place-items-center h-11 w-11 rounded-xl"
-                style={{ background: "rgba(139,92,246,0.15)", color: "var(--accent-2)" }}
+                className="grid place-items-center h-11 w-11 rounded-lg"
+                style={{ background: "var(--accent-soft)", color: "var(--accent-ink)" }}
               >
                 <BedDouble size={20} />
               </span>
@@ -245,7 +240,7 @@ export default function Dashboard() {
                 className="h-full rounded-full"
                 style={{
                   width: `${totalBeds ? (occupiedBeds / totalBeds) * 100 : 0}%`,
-                  background: "linear-gradient(90deg, var(--accent), var(--accent-2))"
+                  background: "var(--accent)"
                 }}
               />
             </div>
@@ -274,17 +269,15 @@ function StatCard({ icon: Icon, title, value, sub, tint }) {
   return (
     <div className="card card-hover p-5">
       <span
-        className="grid place-items-center h-10 w-10 rounded-xl mb-4"
-        style={{ background: `rgba(${tint},0.15)`, color: `rgb(${tint})` }}
+        className="grid place-items-center h-10 w-10 rounded-lg mb-4"
+        style={{ background: `rgba(${tint},0.12)`, color: `rgb(${tint})` }}
       >
         <Icon size={20} />
       </span>
-      <div className="text-sm" style={{ color: "var(--text-muted)" }}>
-        {title}
-      </div>
-      <div className="text-2xl font-bold mt-1">{value}</div>
+      <div className="eyebrow">{title}</div>
+      <div className="num text-2xl font-bold mt-1.5">{value}</div>
       {sub && (
-        <div className="text-xs mt-1" style={{ color: "var(--text-faint)" }}>
+        <div className="num text-xs mt-1" style={{ color: "var(--text-faint)" }}>
           {sub}
         </div>
       )}

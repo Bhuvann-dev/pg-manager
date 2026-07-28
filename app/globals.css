@@ -2,42 +2,48 @@
 
 /*
 ============================================================
-PG Manager — design system
-A modern dark dashboard aesthetic: layered near-black surfaces,
-an indigo→violet accent, soft borders, and gentle elevation.
+PG Manager — "Ledger" theme
+Warm paper light UI, flat surfaces with crisp borders, a teal
+identity, and tabular monospace numerals for money. No gradients.
 ============================================================
 */
 
 :root {
-  /* Base surfaces */
-  --bg: #0a0e17;
-  --bg-2: #0d1322;
-  --surface: #121a2b;
-  --surface-2: #182136;
-  --surface-3: #1f2b44;
+  /* Warm paper surfaces */
+  --bg: #f2efe7;
+  --bg-2: #eeeade;
+  --surface: #ffffff;
+  --surface-2: #f6f3ec;
+  --surface-3: #ebe6da;
 
-  /* Borders & lines */
-  --border: rgba(148, 163, 184, 0.12);
-  --border-strong: rgba(148, 163, 184, 0.22);
+  /* Borders & lines — warm ink at low alpha */
+  --border: #ded8c9;
+  --border-strong: #c9c2ae;
+  --ink: #26231c;
 
   /* Text */
-  --text: #e8ecf5;
-  --text-muted: #93a1b9;
-  --text-faint: #64748b;
+  --text: #26231c;
+  --text-muted: #6c6555;
+  --text-faint: #9a927f;
 
-  /* Brand accent */
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --accent-2: #8b5cf6;
+  /* Brand identity — teal */
+  --accent: #0f8a7e;
+  --accent-hover: #0b6f66;
+  --accent-soft: #dcefec;
+  --accent-ink: #0a4a44;
 
   /* Semantic */
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --pending: #facc15;
+  --success: #1f9d55;
+  --success-soft: #dff2e6;
+  --warning: #c47d0a;
+  --warning-soft: #f6ecd6;
+  --danger: #c8412f;
+  --danger-soft: #f6e0dc;
+  --pending: #b07d05;
+  --pending-soft: #f4ecd4;
 
-  --radius: 16px;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --radius: 14px;
+  --shadow: 0 1px 0 var(--border), 0 2px 8px -6px rgba(38, 35, 28, 0.25);
 }
 
 @theme inline {
@@ -48,32 +54,25 @@ an indigo→violet accent, soft borders, and gentle elevation.
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   min-height: 100vh;
   color: var(--text);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  background:
-    radial-gradient(
-      1200px 600px at 15% -10%,
-      rgba(99, 102, 241, 0.10),
-      transparent 60%
-    ),
-    radial-gradient(
-      900px 500px at 100% 0%,
-      rgba(139, 92, 246, 0.08),
-      transparent 55%
-    ),
-    linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 60%);
-  background-attachment: fixed;
+  /* Flat warm paper with a faint grid — deliberately not a gradient. */
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-position: -1px -1px;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Selection + focus */
 ::selection {
-  background: rgba(99, 102, 241, 0.35);
+  background: var(--accent-soft);
 }
 
 *:focus-visible {
@@ -81,27 +80,36 @@ body {
   outline-offset: 2px;
 }
 
-/* Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--surface-3) transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background: var(--surface-3);
+  background: var(--border-strong);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
-/*
-------------------------------------------------------------
-Reusable component classes
-------------------------------------------------------------
-*/
+/* Tabular monospace numerals — the "ledger" signature. */
+.num {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Small uppercase eyebrow labels. */
+.eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
 
 @layer components {
   .card {
@@ -112,14 +120,15 @@ Reusable component classes
   }
 
   .card-hover {
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease,
+      transform 0.1s ease;
   }
   .card-hover:hover {
-    transform: translateY(-2px);
-    border-color: var(--border-strong);
+    border-color: var(--accent);
+    box-shadow: 0 2px 0 var(--accent-soft), 0 10px 24px -14px rgba(15, 138, 126, 0.5);
   }
 
-  /* Buttons */
+  /* Buttons — solid, flat, no gradient. */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -128,9 +137,10 @@ Reusable component classes
     font-weight: 600;
     font-size: 0.875rem;
     padding: 0.55rem 1rem;
-    border-radius: 12px;
-    transition: background 0.15s ease, opacity 0.15s ease,
-      transform 0.05s ease, border-color 0.15s ease;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease,
+      color 0.15s ease, transform 0.04s ease;
     cursor: pointer;
     white-space: nowrap;
   }
@@ -144,37 +154,39 @@ Reusable component classes
 
   .btn-primary {
     color: #fff;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 0 6px 18px -8px rgba(99, 102, 241, 0.9);
+    background: var(--accent);
   }
   .btn-primary:hover:not(:disabled) {
-    filter: brightness(1.08);
+    background: var(--accent-hover);
   }
 
   .btn-secondary {
     color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    background: var(--surface);
+    border-color: var(--border-strong);
   }
   .btn-secondary:hover:not(:disabled) {
-    background: var(--surface-3);
+    background: var(--surface-2);
+    border-color: var(--accent);
+    color: var(--accent-ink);
   }
 
   .btn-success {
-    color: #04120b;
+    color: #fff;
     background: var(--success);
   }
   .btn-success:hover:not(:disabled) {
-    filter: brightness(1.05);
+    filter: brightness(0.95);
   }
 
   .btn-danger {
-    color: #fff;
-    background: rgba(248, 113, 113, 0.15);
-    border: 1px solid rgba(248, 113, 113, 0.4);
+    color: var(--danger);
+    background: var(--danger-soft);
+    border-color: var(--danger);
   }
   .btn-danger:hover:not(:disabled) {
-    background: rgba(248, 113, 113, 0.25);
+    background: var(--danger);
+    color: #fff;
   }
 
   .btn-ghost {
@@ -189,17 +201,17 @@ Reusable component classes
   .btn-sm {
     padding: 0.35rem 0.7rem;
     font-size: 0.8rem;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   /* Inputs */
   .input {
     width: 100%;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     color: var(--text);
-    border-radius: 12px;
-    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
     font-size: 0.9rem;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
@@ -209,46 +221,49 @@ Reusable component classes
   .input:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
   .label {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     color: var(--text-muted);
     margin-bottom: 0.35rem;
   }
 
-  /* Badges */
+  /* Badges — flat tinted chips with a left rule feel. */
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
     border: 1px solid transparent;
   }
   .badge-success {
-    color: var(--success);
-    background: rgba(52, 211, 153, 0.12);
-    border-color: rgba(52, 211, 153, 0.3);
+    color: #0f6b39;
+    background: var(--success-soft);
+    border-color: #b7e0c6;
   }
   .badge-warning {
-    color: var(--warning);
-    background: rgba(251, 191, 36, 0.12);
-    border-color: rgba(251, 191, 36, 0.3);
+    color: #8a5a06;
+    background: var(--warning-soft);
+    border-color: #e6d3a6;
   }
   .badge-danger {
-    color: var(--danger);
-    background: rgba(248, 113, 113, 0.12);
-    border-color: rgba(248, 113, 113, 0.3);
+    color: #972f20;
+    background: var(--danger-soft);
+    border-color: #e6bdb4;
   }
   .badge-pending {
-    color: var(--pending);
-    background: rgba(250, 204, 21, 0.12);
-    border-color: rgba(250, 204, 21, 0.3);
+    color: #7a5604;
+    background: var(--pending-soft);
+    border-color: #e6d6a3;
   }
   .badge-neutral {
     color: var(--text-muted);
@@ -256,12 +271,11 @@ Reusable component classes
     border-color: var(--border);
   }
 
-  /* Modal backdrop */
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(4, 6, 12, 0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(38, 35, 28, 0.35);
+    backdrop-filter: blur(2px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -270,38 +284,29 @@ Reusable component classes
   }
 }
 
-/* Shown only when printing (e.g. the report period under the title). */
 .print-only {
   display: none;
 }
 
-/*
-Print / "Save as PDF": show only the report, on white, so it prints clean
-without the app chrome. Everything else is hidden.
-*/
 @media print {
   body {
     background: #ffffff !important;
+    background-image: none !important;
     color: #000000 !important;
   }
-
   .no-print {
     display: none !important;
   }
-
   .print-only {
     display: block !important;
   }
-
   body * {
     visibility: hidden;
   }
-
   #report,
   #report * {
     visibility: visible;
   }
-
   #report {
     position: absolute;
     top: 0;
@@ -310,20 +315,13 @@ without the app chrome. Everything else is hidden.
     padding: 0;
     color: #000000 !important;
   }
-
-  #report .card,
-  #report .bg-slate-900,
-  #report .bg-slate-800 {
-    background: #ffffff !important;
-    color: #000000 !important;
+  #report .card {
     box-shadow: none !important;
     border-color: #cccccc !important;
   }
-
   #report table {
     border-collapse: collapse;
   }
-
   #report th,
   #report td {
     border: 1px solid #cccccc !important;
