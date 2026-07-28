@@ -17,6 +17,7 @@ import {
 } from "../../services/roomService";
 import { uploadDocument } from "../../services/storageService";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import * as XLSX from "xlsx";
 
 /*
@@ -35,6 +36,7 @@ const formatPhone =
 export default function AddTenantPage() {
 
   const { user } = useAuth();
+  const { toast, confirm } = useToast();
 
   /*
   FORM STATE
@@ -367,8 +369,9 @@ export default function AddTenantPage() {
 
       }
 
-      alert(
-        `${successCount} tenants added successfully`
+      toast(
+        `${successCount} tenants added successfully`,
+        "success"
       );
 
       const updatedTenants = await getTenants(user.uid);
@@ -378,7 +381,7 @@ export default function AddTenantPage() {
 
       console.error(error);
 
-      alert(
+      toast(
         "Upload failed"
       );
 

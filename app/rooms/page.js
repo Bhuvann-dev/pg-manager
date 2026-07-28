@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DoorOpen, Plus, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import {
   addRoom,
   getRooms,
@@ -15,6 +16,7 @@ import { Loading } from "../../components/States";
 
 export default function RoomsPage() {
   const { user } = useAuth();
+  const { toast, confirm } = useToast();
 
   const [rooms, setRooms] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -99,14 +101,14 @@ export default function RoomsPage() {
     const cap = parseInt(editingRoom.capacity, 10);
 
     if (!Number.isFinite(cap) || cap < 1) {
-      alert("Capacity must be at least 1 bed.");
+      toast("Capacity must be at least 1 bed.", "error");
       return;
     }
 
     const occupancy = computeOccupancy(editingRoom, tenants);
 
     if (cap < occupancy) {
-      alert(
+      toast(
         `This room already has ${occupancy} tenant(s). ` +
           `Capacity can't be lower than that.`
       );
@@ -123,7 +125,7 @@ export default function RoomsPage() {
       setEditingRoom(null);
       loadData();
     } else {
-      alert("Update failed.");
+      toast("Update failed.", "error");
     }
   };
 
@@ -135,14 +137,14 @@ export default function RoomsPage() {
     const occupancy = computeOccupancy(room, tenants);
 
     if (occupancy > 0) {
-      alert(
+      toast(
         `Room ${room.roomNumber} has ${occupancy} tenant(s). ` +
           `Move or remove them before deleting the room.`
       );
       return;
     }
 
-    if (!window.confirm(`Delete room ${room.roomNumber}?`)) return;
+    if (!await confirm(`Delete room ${room.roomNumber}?`)) return;
 
     const success = await deleteRoom(room.id);
     if (success) loadData();

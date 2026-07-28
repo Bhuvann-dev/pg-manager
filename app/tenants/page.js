@@ -34,6 +34,7 @@ import { formatMoney } from "../../lib/format";
 import { Loading, EmptyState, SkeletonRows } from "../../components/States";
 import { Search, AlertTriangle, History, Users, Archive } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 
 const STATUS_STYLES = {
   paid: "t-success",
@@ -44,6 +45,7 @@ const STATUS_STYLES = {
 
 export default function TenantsPage() {
   const { user } = useAuth();
+  const { toast, confirm } = useToast();
 
   const [tenants, setTenants] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -98,7 +100,7 @@ export default function TenantsPage() {
     const amount = parseInt(payAmount, 10);
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      alert("Enter a valid amount.");
+      toast("Enter a valid amount.", "error");
       return;
     }
 
@@ -121,7 +123,7 @@ export default function TenantsPage() {
       setPayAmount("");
       await loadData();
     } else {
-      alert("Could not record the payment.");
+      toast("Could not record the payment.", "error");
     }
   };
 
@@ -142,7 +144,7 @@ export default function TenantsPage() {
     if (url) {
       window.open(url, "_blank");
     } else {
-      alert("Could not open the document.");
+      toast("Could not open the document.", "error");
     }
   };
 
@@ -159,7 +161,7 @@ export default function TenantsPage() {
     const label = `${MONTH_NAMES[payment.month - 1]} ${payment.year}`;
 
     if (
-      !window.confirm(
+      !await confirm(
         `Remove the ${formatMoney(payment.amount)} entry for ${label}? This corrects a mistaken entry.`
       )
     ) {
@@ -176,10 +178,10 @@ export default function TenantsPage() {
   */
 
   const handleDeactivate = async (tenant) => {
-    if (!window.confirm("Are you sure this tenant left?")) return;
+    if (!await confirm("Are you sure this tenant left?")) return;
 
     if (await deactivateTenant(tenant)) {
-      alert("Tenant marked as left");
+      toast("Tenant marked as left", "success");
       loadData();
     }
   };
@@ -203,7 +205,7 @@ export default function TenantsPage() {
         if (path) {
           aadhaarPath = path;
         } else {
-          alert("Document upload failed. Other changes were not saved.");
+          toast("Document upload failed. Other changes were not saved.", "error");
           return;
         }
       }
@@ -226,7 +228,7 @@ export default function TenantsPage() {
       const success = await updateTenant(editingTenant.id, updatedTenant);
 
       if (!success) {
-        alert("Update failed");
+        toast("Update failed", "error");
         return;
       }
 
@@ -234,7 +236,7 @@ export default function TenantsPage() {
       await loadData();
     } catch (error) {
       console.error(error);
-      alert("Update failed");
+      toast("Update failed", "error");
     }
   };
 

@@ -43,6 +43,7 @@ import {
 import { formatMoney } from "../../../lib/format";
 import { Loading, EmptyState } from "../../../components/States";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useToast } from "../../../contexts/ToastContext";
 
 const STATUS_STYLES = {
   paid: "badge badge-success",
@@ -60,6 +61,7 @@ const STATUS_LABEL = {
 
 export default function TenantDetailPage() {
   const { user } = useAuth();
+  const { toast, confirm } = useToast();
   const params = useParams();
   const router = useRouter();
   const tenantId = params.id;
@@ -117,7 +119,7 @@ export default function TenantDetailPage() {
     if (target) {
       const occupancy = computeOccupancy(target, allTenants);
       if (occupancy >= (Number(target.capacity) || 0)) {
-        alert(`Room ${target.roomNumber} is full.`);
+        toast(`Room ${target.roomNumber} is full.`, "error");
         return;
       }
     }
@@ -127,7 +129,7 @@ export default function TenantDetailPage() {
       setShowMove(false);
       await load();
     } else {
-      alert("Could not move the tenant.");
+      toast("Could not move the tenant.", "error");
     }
   };
 
@@ -140,7 +142,7 @@ export default function TenantDetailPage() {
   const handleRecordPayment = async () => {
     const amount = parseInt(payAmount, 10);
     if (!Number.isFinite(amount) || amount <= 0) {
-      alert("Enter a valid amount.");
+      toast("Enter a valid amount.", "error");
       return;
     }
 
@@ -163,7 +165,7 @@ export default function TenantDetailPage() {
       setPayAmount("");
       await load();
     } else {
-      alert("Could not record the payment.");
+      toast("Could not record the payment.", "error");
     }
   };
 
@@ -178,7 +180,7 @@ export default function TenantDetailPage() {
   const handleRecordDeposit = async () => {
     const amount = parseInt(depositAmount, 10);
     if (!Number.isFinite(amount) || amount <= 0) {
-      alert("Enter a valid amount.");
+      toast("Enter a valid amount.", "error");
       return;
     }
 
@@ -201,7 +203,7 @@ export default function TenantDetailPage() {
       setDepositAmount("");
       await load();
     } else {
-      alert("Could not record the deposit.");
+      toast("Could not record the deposit.", "error");
     }
   };
 
@@ -210,7 +212,7 @@ export default function TenantDetailPage() {
     if (collected <= 0) return;
 
     if (
-      !window.confirm(
+      !await confirm(
         `Refund the full deposit of ${formatMoney(collected)}? This records a refund entry.`
       )
     ) {
@@ -237,7 +239,7 @@ export default function TenantDetailPage() {
   const handleRemovePayment = async (p) => {
     const label = `${MONTH_NAMES[p.month - 1]} ${p.year}`;
     if (
-      !window.confirm(`Remove the ${formatMoney(p.amount)} entry for ${label}?`)
+      !await confirm(`Remove the ${formatMoney(p.amount)} entry for ${label}?`)
     ) {
       return;
     }
@@ -254,11 +256,11 @@ export default function TenantDetailPage() {
     }
     const url = await getDocumentUrl(value);
     if (url) window.open(url, "_blank");
-    else alert("Could not open the document.");
+    else toast("Could not open the document.", "error");
   };
 
   const handleLeft = async () => {
-    if (!window.confirm("Mark this tenant as left?")) return;
+    if (!await confirm("Mark this tenant as left?")) return;
     if (await deactivateTenant(tenant)) {
       router.push("/tenants");
     }
