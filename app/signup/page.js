@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { friendlyAuthError } from "../../lib/authErrors";
+import PasswordInput from "../../components/PasswordInput";
 
 export default function SignupPage() {
   const { user, signup, loginWithGoogle } = useAuth();
@@ -100,27 +101,21 @@ export default function SignupPage() {
 
           <div>
             <label htmlFor="signup-password" className="label">Password</label>
-            <input
+            <PasswordInput
               id="signup-password"
-              type="password"
               autoComplete="new-password"
-              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input mt-1"
             />
           </div>
 
           <div>
             <label htmlFor="signup-confirm" className="label">Confirm Password</label>
-            <input
+            <PasswordInput
               id="signup-confirm"
-              type="password"
               autoComplete="new-password"
-              required
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="input mt-1"
             />
           </div>
 

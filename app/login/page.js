@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { friendlyAuthError } from "../../lib/authErrors";
+import PasswordInput from "../../components/PasswordInput";
 
 export default function LoginPage() {
   const { user, login, loginWithGoogle } = useAuth();
@@ -97,14 +98,11 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <input
+            <PasswordInput
               id="login-password"
-              type="password"
               autoComplete="current-password"
-              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input mt-1"
             />
           </div>
 
