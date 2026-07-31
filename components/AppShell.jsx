@@ -9,6 +9,7 @@ import { AUTH_ENABLED } from "../lib/config";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
 import ThemeToggle from "./ThemeToggle";
+import VerifyEmailGate from "./VerifyEmailGate";
 
 /*
 AppShell — client-side route protection + layout.
@@ -46,6 +47,11 @@ export default function AppShell({ children }) {
         Loading…
       </div>
     );
+  }
+
+  // Signed in but email not verified — block the app until they verify.
+  if (AUTH_ENABLED && !user.emailVerified) {
+    return <VerifyEmailGate />;
   }
 
   // Authenticated app.

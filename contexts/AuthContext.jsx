@@ -15,6 +15,8 @@ import {
   signInWithRedirect,
   getRedirectResult,
   sendPasswordResetEmail,
+  sendEmailVerification,
+  reload,
   signOut
 } from "firebase/auth";
 
@@ -37,6 +39,8 @@ write. See docs/decisions.md ADR-006 for why auth lives in the client.
  * @property {(email: string, password: string) => Promise<any>} login
  * @property {() => Promise<any>} loginWithGoogle
  * @property {(email: string) => Promise<void>} resetPassword
+ * @property {() => Promise<void>} resendVerification
+ * @property {() => Promise<boolean>} refreshUser
  * @property {() => Promise<void>} logout
  */
 
@@ -46,11 +50,17 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Bumped after reload() so consumers re-read user.emailVerified.
+  const [, setVersion] = useState(0);
 
   useEffect(() => {
     // Auth disabled: run as a fixed local owner, no Firebase session.
     if (!AUTH_ENABLED) {
-      setUser({ uid: LOCAL_OWNER_ID, email: "local (auth off)" });
+      setUser({
+        uid: LOCAL_OWNER_ID,
+        email: "local (auth off)",
+        emailVerified: true
+      });
       setLoading(false);
       return;
     }
@@ -70,8 +80,16 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  const signup = (email, password) =>
-    createUserWithEmailAndPassword(auth, email, password);
+  const signup = async (email, password) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    // Send the verification email immediately after account creation.
+    try {
+      await sendEmailVerification(cred.user);
+    } catch (err) {
+      console.warn("Could not send verification email:", err?.code || err);
+    }
+    return cred;
+  };
 
   const login = (email, password) =>
     signInWithEmailAndPassword(auth, email, password);
@@ -98,6 +116,22 @@ export function AuthProvider({ children }) {
   const resetPassword = (email) =>
     sendPasswordResetEmail(auth, email);
 
+  const resendVerification = async () => {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser);
+    }
+  };
+
+  // Reload the current user from Firebase (picks up email verification done
+  // in another tab/device) and force consumers to re-read. Returns the
+  // latest emailVerified value.
+  const refreshUser = async () => {
+    if (!auth.currentUser) return false;
+    await reload(auth.currentUser);
+    setVersion((v) => v + 1);
+    return auth.currentUser.emailVerified;
+  };
+
   const logout = () => signOut(auth);
 
   const value = {
@@ -107,6 +141,8 @@ export function AuthProvider({ children }) {
     login,
     loginWithGoogle,
     resetPassword,
+    resendVerification,
+    refreshUser,
     logout
   };
 
