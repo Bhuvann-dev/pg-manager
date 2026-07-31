@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { friendlyAuthError } from "../../lib/authErrors";
 
 export default function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
@@ -23,7 +24,7 @@ export default function LoginPage() {
       await login(email, password);
       router.replace("/");
     } catch (err) {
-      setError(friendlyError(err));
+      setError(friendlyAuthError(err));
       setLoading(false);
     }
   };
@@ -36,7 +37,7 @@ export default function LoginPage() {
       await loginWithGoogle();
       router.replace("/");
     } catch (err) {
-      setError(friendlyError(err));
+      setError(friendlyAuthError(err));
       setLoading(false);
     }
   };
@@ -129,40 +130,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
-
-function friendlyError(err) {
-  const code = err?.code || "";
-
-  if (code.includes("invalid-credential") || code.includes("wrong-password")) {
-    return "Incorrect email or password.";
-  }
-  if (code.includes("user-not-found")) {
-    return "No account found for that email.";
-  }
-  if (code.includes("too-many-requests")) {
-    return "Too many attempts. Try again in a moment.";
-  }
-  if (
-    code.includes("operation-not-allowed") ||
-    code.includes("admin-restricted-operation")
-  ) {
-    return "This sign-in method is not enabled for this project. Enable it in Firebase Console → Authentication → Sign-in method.";
-  }
-  if (
-    code.includes("configuration-not-found") ||
-    code.includes("api-key-not-valid")
-  ) {
-    return "Firebase auth isn't configured. Check your .env.local values and that Authentication is enabled in the Firebase console.";
-  }
-  if (code.includes("network-request-failed")) {
-    return "Network error — check your connection and try again.";
-  }
-  if (code.includes("popup-closed") || code.includes("cancelled-popup")) {
-    return "Google sign-in was cancelled.";
-  }
-
-  // Surface the raw Firebase code so unexpected failures are diagnosable.
-  console.error("Login error:", err);
-  return `Could not sign in${code ? ` (${code})` : ""}. Please try again.`;
 }

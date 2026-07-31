@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { friendlyAuthError } from "../../lib/authErrors";
 
 export default function SignupPage() {
   const { signup, loginWithGoogle } = useAuth();
@@ -35,7 +36,7 @@ export default function SignupPage() {
       await signup(email, password);
       router.replace("/");
     } catch (err) {
-      setError(friendlyError(err));
+      setError(friendlyAuthError(err));
       setLoading(false);
     }
   };
@@ -48,7 +49,7 @@ export default function SignupPage() {
       await loginWithGoogle();
       router.replace("/");
     } catch (err) {
-      setError(friendlyError(err));
+      setError(friendlyAuthError(err));
       setLoading(false);
     }
   };
@@ -143,40 +144,4 @@ export default function SignupPage() {
       </div>
     </div>
   );
-}
-
-function friendlyError(err) {
-  const code = err?.code || "";
-
-  if (code.includes("email-already-in-use")) {
-    return "An account with that email already exists.";
-  }
-  if (code.includes("invalid-email")) {
-    return "Please enter a valid email address.";
-  }
-  if (code.includes("weak-password")) {
-    return "Password is too weak — use at least 6 characters.";
-  }
-  if (
-    code.includes("operation-not-allowed") ||
-    code.includes("admin-restricted-operation")
-  ) {
-    return "Email/password sign-in is not enabled for this project. Enable it in Firebase Console → Authentication → Sign-in method.";
-  }
-  if (
-    code.includes("configuration-not-found") ||
-    code.includes("api-key-not-valid")
-  ) {
-    return "Firebase auth isn't configured. Check your .env.local values and that Authentication is enabled in the Firebase console.";
-  }
-  if (code.includes("network-request-failed")) {
-    return "Network error — check your connection and try again.";
-  }
-  if (code.includes("popup-closed") || code.includes("cancelled-popup")) {
-    return "Google sign-in was cancelled.";
-  }
-
-  // Surface the raw Firebase code so unexpected failures are diagnosable.
-  console.error("Signup error:", err);
-  return `Could not create account${code ? ` (${code})` : ""}. Please try again.`;
 }
