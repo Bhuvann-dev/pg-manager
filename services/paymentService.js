@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc
 } from "firebase/firestore";
+import { validatePayment } from "../lib/validation";
 
 /*
 Payments are an append-only rent ledger, scoped to the signed-in owner.
@@ -22,6 +23,12 @@ RECORD A PAYMENT
 
 export const recordPayment = async (payment, ownerId) => {
   try {
+    const v = validatePayment(payment);
+    if (!v.ok) {
+      console.error("Invalid payment:", v.error);
+      return false;
+    }
+
     await addDoc(collection(db, "payments"), {
       ...payment,
       ownerId

@@ -9,6 +9,7 @@ import {
   updateDoc,
   deleteDoc
 } from "firebase/firestore";
+import { validateRoom } from "../lib/validation";
 
 /*
 Rooms are first-class, owner-scoped documents with a bed `capacity`.
@@ -23,6 +24,12 @@ ADD ROOM
 
 export const addRoom = async (room, ownerId) => {
   try {
+    const v = validateRoom(room);
+    if (!v.ok) {
+      console.error("Invalid room:", v.error);
+      return false;
+    }
+
     await addDoc(collection(db, "rooms"), {
       ...room,
       ownerId,
@@ -66,6 +73,12 @@ UPDATE ROOM
 
 export const updateRoom = async (roomId, data) => {
   try {
+    const v = validateRoom(data);
+    if (!v.ok) {
+      console.error("Invalid room update:", v.error);
+      return false;
+    }
+
     const cleanData = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== undefined)
     );

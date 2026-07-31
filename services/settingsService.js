@@ -1,5 +1,6 @@
 import { db } from "../lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { validateSettings } from "../lib/validation";
 
 /*
 Per-owner app settings, stored at settings/{ownerId}. Holds the PG name
@@ -21,6 +22,13 @@ export const getSettings = async (ownerId) => {
 export const saveSettings = async (ownerId, data) => {
   try {
     if (!ownerId) return false;
+
+    const v = validateSettings(data);
+    if (!v.ok) {
+      console.error("Invalid settings:", v.error);
+      return false;
+    }
+
     await setDoc(
       doc(db, "settings", ownerId),
       { ...data, ownerId },

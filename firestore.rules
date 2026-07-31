@@ -3,9 +3,12 @@ rules_version = '2';
 // PG Manager — Firestore security rules.
 //
 // The app is client-only, so these rules ARE the backend trust boundary.
-// Every domain document carries an `ownerId`. An owner may only ever read
-// or write documents they own, and only while signed in.
-// See docs/data-model.md for the full contract.
+// Every domain document carries an `ownerId`. An owner may only read or
+// write documents they own, and only while signed in. Beyond ownership,
+// writes are validated: field types/ranges are checked (validate-if-present,
+// so legacy docs and partial updates aren't rejected for missing keys),
+// ownerId can't be reassigned, and document size is capped — hardening the
+// backend against malformed or abusive writes. See docs/data-model.md.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -18,37 +21,80 @@ service cloud.firestore {
       return request.auth.uid;
     }
 
-    // A document belongs to the caller.
     function ownsExisting() {
       return isSignedIn() && resource.data.ownerId == uid();
     }
 
-    // A document being created is stamped with the caller's uid.
     function ownsIncoming() {
       return isSignedIn() && request.resource.data.ownerId == uid();
     }
 
+    // ownerId must never change on update.
+    function ownerUnchanged() {
+      return request.resource.data.ownerId == resource.data.ownerId;
+    }
+
+    function validTenant(d) {
+      return d.ownerId is string
+        && d.keys().size() <= 40
+        && (!('name' in d) || (d.name is string && d.name.size() <= 100))
+        && (!('phone' in d) || (d.phone is string && d.phone.size() <= 20))
+        && (!('roomNumber' in d) || (d.roomNumber is string && d.roomNumber.size() <= 30))
+        && (!('rentAmount' in d) || (d.rentAmount is int && d.rentAmount >= 0 && d.rentAmount <= 100000000))
+        && (!('dueDate' in d) || d.dueDate == null || (d.dueDate is int && d.dueDate >= 1 && d.dueDate <= 31))
+        && (!('deposit' in d) || (d.deposit is int && d.deposit >= 0 && d.deposit <= 100000000))
+        && (!('status' in d) || (d.status is string && (d.status == 'active' || d.status == 'inactive')))
+        && (!('aadhaarPath' in d) || d.aadhaarPath == null || (d.aadhaarPath is string && d.aadhaarPath.size() <= 500));
+    }
+
+    function validPayment(d) {
+      return d.ownerId is string
+        && d.keys().size() <= 30
+        && (!('tenantId' in d) || (d.tenantId is string && d.tenantId.size() <= 200))
+        && (!('tenantName' in d) || (d.tenantName is string && d.tenantName.size() <= 100))
+        && (!('amount' in d) || (d.amount is int && d.amount >= -100000000 && d.amount <= 100000000))
+        && (!('month' in d) || (d.month is int && d.month >= 1 && d.month <= 12))
+        && (!('year' in d) || (d.year is int && d.year >= 2000 && d.year <= 2100))
+        && (!('type' in d) || (d.type is string && (d.type == 'rent' || d.type == 'deposit')));
+    }
+
+    function validRoom(d) {
+      return d.ownerId is string
+        && d.keys().size() <= 20
+        && (!('roomNumber' in d) || (d.roomNumber is string && d.roomNumber.size() <= 30))
+        && (!('capacity' in d) || (d.capacity is int && d.capacity >= 1 && d.capacity <= 100000))
+        && (!('notes' in d) || (d.notes is string && d.notes.size() <= 500));
+    }
+
     match /rooms/{roomId} {
       allow read: if ownsExisting();
-      allow create: if ownsIncoming();
-      allow update, delete: if ownsExisting();
+      allow create: if ownsIncoming() && validRoom(request.resource.data);
+      allow update: if ownsExisting() && ownerUnchanged() && validRoom(request.resource.data);
+      allow delete: if ownsExisting();
     }
 
     match /tenants/{tenantId} {
       allow read: if ownsExisting();
-      allow create: if ownsIncoming();
-      allow update, delete: if ownsExisting();
+      allow create: if ownsIncoming() && validTenant(request.resource.data);
+      allow update: if ownsExisting() && ownerUnchanged() && validTenant(request.resource.data);
+      allow delete: if ownsExisting();
     }
 
     match /payments/{paymentId} {
       allow read: if ownsExisting();
-      allow create: if ownsIncoming();
-      allow update, delete: if ownsExisting();
+      allow create: if ownsIncoming() && validPayment(request.resource.data);
+      allow update: if ownsExisting() && ownerUnchanged() && validPayment(request.resource.data);
+      allow delete: if ownsExisting();
     }
 
     // Owner settings live at settings/{ownerId} — the doc id is the owner.
     match /settings/{ownerId} {
-      allow read, write: if isSignedIn() && ownerId == uid();
+      allow read: if isSignedIn() && ownerId == uid();
+      allow write: if isSignedIn() && ownerId == uid()
+        && request.resource.data.keys().size() <= 20
+        && (!('pgName' in request.resource.data) || (request.resource.data.pgName is string && request.resource.data.pgName.size() <= 120))
+        && (!('ownerName' in request.resource.data) || (request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 120))
+        && (!('upiId' in request.resource.data) || (request.resource.data.upiId is string && request.resource.data.upiId.size() <= 120));
     }
 
     // Everything else is denied by default.

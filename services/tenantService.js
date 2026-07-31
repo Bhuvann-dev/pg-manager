@@ -9,6 +9,7 @@ import {
   doc,
   updateDoc
 } from "firebase/firestore";
+import { validateTenant } from "../lib/validation";
 
 /*
 All tenant data is scoped to the signed-in owner (ownerId === auth.uid).
@@ -24,6 +25,12 @@ ADD TENANT
 
 export const addTenant = async (tenant, ownerId) => {
   try {
+    const v = validateTenant(tenant);
+    if (!v.ok) {
+      console.error("Invalid tenant:", v.error);
+      return null;
+    }
+
     const docRef = await addDoc(collection(db, "tenants"), {
       ...tenant,
       ownerId
@@ -163,6 +170,12 @@ UPDATE TENANT
 
 export const updateTenant = async (tenantId, data) => {
   try {
+    const v = validateTenant(data);
+    if (!v.ok) {
+      console.error("Invalid tenant update:", v.error);
+      return false;
+    }
+
     const cleanData = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== undefined)
     );
