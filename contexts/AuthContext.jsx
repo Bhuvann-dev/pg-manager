@@ -12,6 +12,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   sendPasswordResetEmail,
   signOut
 } from "firebase/auth";
@@ -58,6 +60,13 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
+    // Complete any Google sign-in that used the redirect fallback and is
+    // now returning to the app. onAuthStateChanged sets the user; this just
+    // surfaces/absorbs any redirect error so it isn't an unhandled rejection.
+    getRedirectResult(auth).catch((err) => {
+      console.warn("Google redirect sign-in error:", err?.code || err);
+    });
+
     return () => unsubscribe();
   }, []);
 
@@ -67,8 +76,24 @@ export function AuthProvider({ children }) {
   const login = (email, password) =>
     signInWithEmailAndPassword(auth, email, password);
 
-  const loginWithGoogle = () =>
-    signInWithPopup(auth, googleProvider);
+  const loginWithGoogle = async () => {
+    try {
+      // Popup is the primary flow (keeps the user on the page).
+      return await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      const code = err?.code || "";
+      // Popup blocked or unsupported (e.g. some in-app/mobile browsers)
+      // → fall back to a full-page redirect. Other popup errors, like the
+      // user closing/cancelling it, are rethrown and handled gracefully.
+      if (
+        code.includes("popup-blocked") ||
+        code.includes("operation-not-supported")
+      ) {
+        return signInWithRedirect(auth, googleProvider);
+      }
+      throw err;
+    }
+  };
 
   const resetPassword = (email) =>
     sendPasswordResetEmail(auth, email);

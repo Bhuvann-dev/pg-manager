@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { friendlyAuthError } from "../../lib/authErrors";
 
 export default function SignupPage() {
-  const { signup, loginWithGoogle } = useAuth();
+  const { user, signup, loginWithGoogle } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -15,6 +15,12 @@ export default function SignupPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Completes Google sign-in that used the redirect fallback: once the
+  // session is present (on return to the app), continue into the app.
+  useEffect(() => {
+    if (user) router.replace("/");
+  }, [user, router]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
