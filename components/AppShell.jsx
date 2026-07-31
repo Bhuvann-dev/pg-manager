@@ -19,7 +19,7 @@ AppShell — client-side route protection + layout.
   rules (docs/decisions.md ADR-006) — this guard is UX.
 */
 
-const PUBLIC_ROUTES = ["/login", "/signup"];
+const PUBLIC_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 export default function AppShell({ children }) {
   const { user, loading } = useAuth();

@@ -12,6 +12,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  sendPasswordResetEmail,
   signOut
 } from "firebase/auth";
 
@@ -33,6 +34,7 @@ write. See docs/decisions.md ADR-006 for why auth lives in the client.
  * @property {(email: string, password: string) => Promise<any>} signup
  * @property {(email: string, password: string) => Promise<any>} login
  * @property {() => Promise<any>} loginWithGoogle
+ * @property {(email: string) => Promise<void>} resetPassword
  * @property {() => Promise<void>} logout
  */
 
@@ -68,6 +70,9 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = () =>
     signInWithPopup(auth, googleProvider);
 
+  const resetPassword = (email) =>
+    sendPasswordResetEmail(auth, email);
+
   const logout = () => signOut(auth);
 
   const value = {
@@ -76,6 +81,7 @@ export function AuthProvider({ children }) {
     signup,
     login,
     loginWithGoogle,
+    resetPassword,
     logout
   };
 
