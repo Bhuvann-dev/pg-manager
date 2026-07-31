@@ -74,9 +74,11 @@ export default function LoginPage() {
 
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div>
-            <label className="label">Email</label>
+            <label htmlFor="login-email" className="label">Email</label>
             <input
+              id="login-email"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -86,7 +88,7 @@ export default function LoginPage() {
 
           <div>
             <div className="flex items-center justify-between">
-              <label className="label">Password</label>
+              <label htmlFor="login-password" className="label">Password</label>
               <Link
                 href="/forgot-password"
                 className="text-xs hover:underline"
@@ -96,7 +98,9 @@ export default function LoginPage() {
               </Link>
             </div>
             <input
+              id="login-password"
               type="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}

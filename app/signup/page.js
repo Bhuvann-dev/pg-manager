@@ -86,9 +86,11 @@ export default function SignupPage() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="label">Email</label>
+            <label htmlFor="signup-email" className="label">Email</label>
             <input
+              id="signup-email"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -97,9 +99,11 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="label">Password</label>
+            <label htmlFor="signup-password" className="label">Password</label>
             <input
+              id="signup-password"
               type="password"
+              autoComplete="new-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -108,9 +112,11 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="label">Confirm Password</label>
+            <label htmlFor="signup-confirm" className="label">Confirm Password</label>
             <input
+              id="signup-confirm"
               type="password"
+              autoComplete="new-password"
               required
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
